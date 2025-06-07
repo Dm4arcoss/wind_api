@@ -4,12 +4,23 @@
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <div class="flex justify-between items-center mb-6">
           <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Meu Perfil</h1>
-          <button 
-            @click="logout" 
-            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
-          >
-            Sair
-          </button>
+          <div class="flex items-center gap-3">
+            <button @click="toggleTheme" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
+              <i class="fas" :class="isDarkMode ? 'fa-sun' : 'fa-moon'"></i>
+            </button>
+            <button 
+              @click="goBack" 
+              class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition flex items-center"
+            >
+              <i class="fas fa-arrow-left mr-2"></i> Voltar
+            </button>
+            <button 
+              @click="logout" 
+              class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+            >
+              Sair
+            </button>
+          </div>
         </div>
         
         <div v-if="loading" class="text-center py-8">
@@ -55,11 +66,13 @@ export default {
     return {
       user: null,
       loading: true,
-      error: ''
+      error: '',
+      isDarkMode: localStorage.getItem('theme') === 'dark'
     }
   },
   mounted() {
     this.fetchUserProfile()
+    this.applyTheme()
   },
   methods: {
     async fetchUserProfile() {
@@ -103,6 +116,31 @@ export default {
         hour: '2-digit',
         minute: '2-digit'
       }).format(date)
+    },
+    goBack() {
+      this.$router.go(-1)
+    },
+    toggleTheme() {
+      this.isDarkMode = !this.isDarkMode
+      
+      if (this.isDarkMode) {
+        document.body.classList.remove('light-mode')
+        document.body.classList.add('dark-mode')
+        localStorage.setItem('theme', 'dark')
+      } else {
+        document.body.classList.remove('dark-mode')
+        document.body.classList.add('light-mode')
+        localStorage.setItem('theme', 'light')
+      }
+    },
+    applyTheme() {
+      if (this.isDarkMode) {
+        document.body.classList.remove('light-mode')
+        document.body.classList.add('dark-mode')
+      } else {
+        document.body.classList.remove('dark-mode')
+        document.body.classList.add('light-mode')
+      }
     }
   }
 }

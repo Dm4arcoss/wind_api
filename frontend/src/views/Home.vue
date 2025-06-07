@@ -3,21 +3,29 @@
     <div class="container mx-auto px-4 py-8">
       <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold text-gray-800 dark:text-white">API de Autenticação</h1>
-        <div v-if="isLoggedIn" class="flex gap-3">
-          <router-link to="/profile" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
-            Meu Perfil
-          </router-link>
-          <button @click="logout" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition">
-            Sair
+        <div class="flex items-center gap-3">
+          <button @click="toggleTheme" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
+            <i class="fas" :class="isDarkMode ? 'fa-sun' : 'fa-moon'"></i>
           </button>
-        </div>
-        <div v-else class="flex gap-3">
-          <router-link to="/login" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
-            Login
-          </router-link>
-          <router-link to="/register" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition">
-            Registrar
-          </router-link>
+          <div v-if="isLoggedIn" class="flex gap-3">
+            <router-link to="/dashboard" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition">
+              Dashboard
+            </router-link>
+            <router-link to="/profile" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+              Meu Perfil
+            </router-link>
+            <button @click="logout" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition">
+              Sair
+            </button>
+          </div>
+          <div v-else class="flex gap-3">
+            <router-link to="/login" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+              Login
+            </router-link>
+            <router-link to="/register" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition">
+              Registrar
+            </router-link>
+          </div>
         </div>
       </div>
       
@@ -28,7 +36,7 @@
         </p>
         <div v-if="isLoggedIn" class="bg-green-100 dark:bg-green-900 p-4 rounded">
           <p class="text-green-800 dark:text-green-200">
-            Você está logado! Acesse seu perfil para ver seus dados.
+            Você está logado! Acesse o Dashboard para gerenciar seus produtos.
           </p>
         </div>
       </div>
@@ -51,11 +59,13 @@ export default {
   name: 'Home',
   data() {
     return {
-      isLoggedIn: false
+      isLoggedIn: false,
+      isDarkMode: localStorage.getItem('theme') === 'dark'
     }
   },
   mounted() {
     this.checkLoginStatus()
+    this.applyTheme()
   },
   methods: {
     checkLoginStatus() {
@@ -66,6 +76,28 @@ export default {
       localStorage.removeItem('token')
       this.isLoggedIn = false
       this.$router.push('/login')
+    },
+    toggleTheme() {
+      this.isDarkMode = !this.isDarkMode
+      
+      if (this.isDarkMode) {
+        document.body.classList.remove('light-mode')
+        document.body.classList.add('dark-mode')
+        localStorage.setItem('theme', 'dark')
+      } else {
+        document.body.classList.remove('dark-mode')
+        document.body.classList.add('light-mode')
+        localStorage.setItem('theme', 'light')
+      }
+    },
+    applyTheme() {
+      if (this.isDarkMode) {
+        document.body.classList.remove('light-mode')
+        document.body.classList.add('dark-mode')
+      } else {
+        document.body.classList.remove('dark-mode')
+        document.body.classList.add('light-mode')
+      }
     }
   }
 }

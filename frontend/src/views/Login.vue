@@ -1,7 +1,12 @@
 <template>
   <div class="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center px-4">
     <div class="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow p-8">
-      <h1 class="text-2xl font-bold text-center text-gray-800 dark:text-white mb-6">Login</h1>
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Login</h1>
+        <button @click="toggleTheme" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
+          <i class="fas" :class="isDarkMode ? 'fa-sun' : 'fa-moon'"></i>
+        </button>
+      </div>
       
       <div v-if="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
         {{ error }}
@@ -59,8 +64,12 @@ export default {
       email: '',
       password: '',
       error: '',
-      loading: false
+      loading: false,
+      isDarkMode: localStorage.getItem('theme') === 'dark'
     }
+  },
+  mounted() {
+    this.applyTheme()
   },
   methods: {
     async handleLogin() {
@@ -79,6 +88,28 @@ export default {
         this.error = err.response?.data?.message || 'Erro ao fazer login. Verifique suas credenciais.'
       } finally {
         this.loading = false
+      }
+    },
+    toggleTheme() {
+      this.isDarkMode = !this.isDarkMode
+      
+      if (this.isDarkMode) {
+        document.body.classList.remove('light-mode')
+        document.body.classList.add('dark-mode')
+        localStorage.setItem('theme', 'dark')
+      } else {
+        document.body.classList.remove('dark-mode')
+        document.body.classList.add('light-mode')
+        localStorage.setItem('theme', 'light')
+      }
+    },
+    applyTheme() {
+      if (this.isDarkMode) {
+        document.body.classList.remove('light-mode')
+        document.body.classList.add('dark-mode')
+      } else {
+        document.body.classList.remove('dark-mode')
+        document.body.classList.add('light-mode')
       }
     }
   }

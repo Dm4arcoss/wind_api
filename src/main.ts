@@ -14,11 +14,16 @@ async function bootstrap() {
   
   // Configuração do Swagger
   const config = new DocumentBuilder()
-    .setTitle('API de Autenticação')
-    .setDescription('API para autenticação de usuários com JWT')
+    .setTitle('API de Produtos')
+    .setDescription('API para gerenciamento de produtos, categorias, pedidos e clientes')
     .setVersion('1.0')
-    .addTag('auth')
-    .addTag('profile')
+    .addTag('auth', 'Autenticação de usuários')
+    .addTag('profile', 'Perfil do usuário')
+    .addTag('products', 'Gerenciamento de produtos')
+    .addTag('categories', 'Gerenciamento de categorias')
+    .addTag('orders', 'Gerenciamento de pedidos')
+    .addTag('customers', 'Gerenciamento de clientes')
+    .addTag('dashboard', 'Estatísticas e dados para o dashboard')
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);

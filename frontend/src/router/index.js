@@ -3,6 +3,7 @@ import Home from '../views/Home.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 import Profile from '../views/Profile.vue'
+import Dashboard from '../views/Dashboard.vue'
 
 const routes = [
   {
@@ -24,6 +25,12 @@ const routes = [
     path: '/profile',
     name: 'Profile',
     component: Profile,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/dashboard',
+    name: 'Dashboard',
+    component: Dashboard,
     meta: { requiresAuth: true }
   }
 ]

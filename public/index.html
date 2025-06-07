@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API de Autenticação</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #333;
+            --card-bg: #fff;
+            --card-border: #ddd;
+            --header-border: #ddd;
+            --endpoint-bg: #f0f4ff;
+            --btn-primary: #4361ee;
+            --btn-hover: #3a56d4;
+            --get-color: #61affe;
+            --post-color: #49cc90;
+            --delete-color: #f93e3e;
+            --put-color: #fca130;
+        }
+        
+        .dark-mode {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --card-bg: #1e1e1e;
+            --card-border: #333;
+            --header-border: #333;
+            --endpoint-bg: #2d3748;
+            --btn-primary: #4361ee;
+            --btn-hover: #5a72f5;
+            --get-color: #3b82f6;
+            --post-color: #10b981;
+            --delete-color: #ef4444;
+            --put-color: #f59e0b;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            padding: 20px 0;
+            border-bottom: 1px solid var(--header-border);
+            margin-bottom: 30px;
+        }
+        
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+            color: var(--text-color);
+        }
+        
+        h1 i {
+            margin-right: 10px;
+            color: var(--btn-primary);
+        }
+        
+        .theme-toggle button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            padding: 8px 12px;
+            border-radius: 4px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+        }
+        
+        .theme-toggle i {
+            margin-right: 8px;
+        }
+        
+        main {
+            padding-bottom: 40px;
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        
+        h2 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: var(--text-color);
+            font-size: 1.4rem;
+        }
+        
+        .endpoint-card {
+            display: flex;
+            align-items: center;
+            background-color: var(--endpoint-bg);
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            transition: background-color 0.3s;
+        }
+        
+        .method {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            min-width: 70px;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+        
+        .get { background-color: var(--get-color); }
+        .post { background-color: var(--post-color); }
+        .put { background-color: var(--put-color); }
+        .delete { background-color: var(--delete-color); }
+        
+        .path {
+            font-family: 'Courier New', monospace;
+            margin-left: 15px;
+            font-weight: 600;
+            flex: 1;
+        }
+        
+        .description {
+            color: var(--text-color);
+            opacity: 0.8;
+            font-size: 0.9rem;
+            margin-left: 15px;
+            flex: 2;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 10px 18px;
+            background-color: var(--btn-primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin-top: 15px;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            max-width: 200px;
+        }
+
+                .btn-green {
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-weight: 600;
+            margin-top: 15px;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            max-width: 200px;
+        }
+        
+        .btn i {
+            margin-right: 8px;
+        }
+        
+        .btn:hover {
+            background-color: var(--btn-hover);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px 0;
+            border-top: 1px solid var(--header-border);
+            font-size: 0.9rem;
+            color: var(--text-color);
+            opacity: 0.7;
+        }
+        
+        @media (max-width: 768px) {
+            header .container {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .theme-toggle {
+                margin-top: 15px;
+            }
+            
+            .endpoint-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .path, .description {
+                margin-left: 0;
+                margin-top: 8px;
+            }
+        }
+    </style>
+</head>
+<body class="light-mode">
+    <header>
+        <div class="container">
+            <h1><i class="fas fa-lock"></i> API de Autenticação</h1>
+            <div class="theme-toggle">
+                <button id="theme-toggle-btn">
+                    <i class="fas fa-moon"></i>
+                    <span>Modo Escuro</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <h2>Documentação Swagger</h2>
+            <p>Acesse a documentação interativa da API para testar os endpoints:</p>
+            <a href="/api" class="btn" target="_blank">
+                <i class="fas fa-book"></i> Abrir Swagger UI
+            </a>
+        </div>
+
+            <div class="card">
+            <h2>Documentação Swagger</h2>
+            <p>Acesse a documentação interativa da API para testar os endpoints:</p>
+            <a href="http://localhost:5173/login" class="btn-green" target="_blank">
+                <i class="fas fa-book"></i> Login Local
+            </a>
+        </div>
+        
+        <div class="card">
+            <h2>Endpoints de Autenticação</h2>
+            
+            <div class="endpoint-card">
+                <div class="method post">POST</div>
+                <div class="path">/auth/register</div>
+                <div class="description">Registra um novo usuário no sistema</div>
+            </div>
+            
+            <div class="endpoint-card">
+                <div class="method post">POST</div>
+                <div class="path">/auth/login</div>
+                <div class="description">Autentica um usuário e retorna um token JWT</div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Endpoints de Perfil</h2>
+            
+            <div class="endpoint-card">
+                <div class="method get">GET</div>
+                <div class="path">/profile</div>
+                <div class="description">Retorna os dados do usuário autenticado (requer token JWT)</div>
+            </div>
+        </div>
+    </main>
+  <!--DATABASE_URL="mysql://root:@localhost:3306/auth_strategy"-->
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 API de Autenticação. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Função para alternar entre os temas claro e escuro
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggleBtn = document.getElementById('theme-toggle-btn');
+            const body = document.body;
+            const icon = themeToggleBtn.querySelector('i');
+            const text = themeToggleBtn.querySelector('span');
+            
+            // Verificar se há uma preferência salva
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                body.classList.remove('light-mode');
+                body.classList.add('dark-mode');
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                text.textContent = 'Modo Claro';
+            }
+            
+            themeToggleBtn.addEventListener('click', function() {
+                if (body.classList.contains('light-mode') || !body.classList.contains('dark-mode')) {
+                    body.classList.remove('light-mode');
+                    body.classList.add('dark-mode');
+                    icon.classList.remove('fa-moon');
+                    icon.classList.add('fa-sun');
+                    text.textContent = 'Modo Claro';
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    body.classList.remove('dark-mode');
+                    body.classList.add('light-mode');
+                    icon.classList.remove('fa-sun');
+                    icon.classList.add('fa-moon');
+                    text.textContent = 'Modo Escuro';
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

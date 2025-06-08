@@ -10,27 +10,96 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-  ) {}
+  ) {
+    // Verificar se o bcrypt está disponível
+    if (!bcrypt) {
+      throw new Error('Bcrypt não está disponível');
+    }
+  }
 
   async validateUser(email: string, pass: string): Promise<any> {
+    console.log('Tentando validar usuário:', email);
+    
     const user = await this.prisma.user.findUnique({
       where: { email },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        status: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true
+      }
     });
+
+    console.log('Usuário encontrado:', user ? 'Sim' : 'Não');
     
-    if (user && await bcrypt.compare(pass, user.password)) {
-      const { password, ...result } = user;
-      return result;
+    if (!user) {
+      console.log('Usuário não encontrado');
+      throw new UnauthorizedException('Usuário não encontrado');
     }
-    return null;
+
+    // Verificações do usuário
+    console.log('Informações do usuário:', {
+      id: user.id,
+      email: user.email,
+      status: user.status,
+      role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
+    });
+
+    if (user.status !== 'active') {
+      console.log('Usuário inativo - Status:', user.status);
+      throw new UnauthorizedException('Usuário inativo');
+    }
+
+    // Verificação de senha
+    const isPasswordValid = await bcrypt.compare(pass, user.password);
+    console.log('Senha correta:', isPasswordValid);
+
+    if (!isPasswordValid) {
+      console.log('Senha incorreta');
+      throw new UnauthorizedException('Senha incorreta');
+    }
+
+    // Retorna dados do usuário sem a senha
+    const { password, ...userData } = user;
+    console.log('Usuário validado com sucesso');
+    return userData;
   }
 
   async login(user: any) {
-    const payload = { email: user.email, sub: user.id };
+    console.log('Iniciando login para usuário:', user.email);
+    
+    if (!user || !user.id || !user.email) {
+      console.error('Dados do usuário inválidos');
+      throw new UnauthorizedException('Dados do usuário inválidos');
+    }
+
+    const payload = { 
+      email: user.email, 
+      sub: user.id,
+      role: user.role
+    };
+
+    console.log('Payload do token:', payload);
+    
+    const token = this.jwtService.sign(payload, {
+      secret: JWT_SECRET,
+      expiresIn: JWT_EXPIRES_IN,
+    });
+
+    console.log('Token gerado com sucesso');
     return {
-      access_token: this.jwtService.sign(payload, {
-        secret: JWT_SECRET,
-        expiresIn: JWT_EXPIRES_IN,
-      }),
+      access_token: token,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        status: user.status
+      }
     };
   }
 
@@ -49,11 +118,12 @@ export class AuthService {
       data: {
         email: registerDto.email,
         password: hashedPassword,
-        name: registerDto.name,
+        role: 'user',
+        status: 'active',
+        name: registerDto.name || ''
       },
     });
     
-    const { password, ...result } = user;
-    return result;
+    return this.login(user);
   }
 }

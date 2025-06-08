@@ -30,6 +30,18 @@ export class ProductsService {
     });
   }
 
+  async getRecentProducts() {
+    return this.prisma.product.findMany({
+      include: {
+        category: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 5 // Limitar a 5 produtos recentes
+    });
+  }
+
   async findOne(id: number) {
     const product = await this.prisma.product.findUnique({
       where: { id },

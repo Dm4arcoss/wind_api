@@ -77,15 +77,40 @@ export default {
       this.error = ''
       
       try {
-        const response = await axios.post('http://localhost:3001/auth/login', {
+        console.log('Tentando fazer login com:', {
           email: this.email,
+          password: '****'
+        })
+        
+        const response = await axios.post('http://localhost:3001/auth/login', {
+          email: this.email.trim().toLowerCase(),
           password: this.password
         })
         
-        localStorage.setItem('token', response.data.access_token)
-        this.$router.push('/') // Redirecionando para a home após o login
+        console.log('Resposta do login:', response.data)
+        
+        if (response.data.access_token) {
+          localStorage.setItem('token', response.data.access_token)
+          if (response.data.user) {
+            localStorage.setItem('user', JSON.stringify(response.data.user))
+          }
+          this.$router.push('/')
+        } else {
+          throw new Error('Token não recebido')
+        }
       } catch (err) {
-        this.error = err.response?.data?.message || 'Erro ao fazer login. Verifique suas credenciais.'
+        console.error('Erro detalhado:', err)
+        
+        let errorMessage = 'Erro ao fazer login'
+        if (err.response?.data?.message) {
+          errorMessage = err.response.data.message
+        } else if (err.response?.status === 401) {
+          errorMessage = 'Credenciais inválidas'
+        } else if (err.message) {
+          errorMessage = err.message
+        }
+        
+        this.error = errorMessage
       } finally {
         this.loading = false
       }

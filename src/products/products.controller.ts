@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards, Query, BadRequestException } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -52,13 +52,48 @@ export class ProductsController {
     return this.productsService.findAll(categoryId ? parseInt(categoryId) : undefined);
   }
 
+  @ApiOperation({ summary: 'Listar produtos recentes' })
+  @ApiOkResponse({ 
+    description: 'Lista de produtos recentes retornada com sucesso',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'number', example: 1 },
+          name: { type: 'string', example: 'Smartphone XYZ' },
+          description: { type: 'string', example: 'Smartphone com 128GB de memória', nullable: true },
+          price: { type: 'number', example: 1299.99 },
+          stock: { type: 'number', example: 15 },
+          imageUrl: { type: 'string', example: 'https://exemplo.com/imagem.jpg', nullable: true },
+          createdAt: { type: 'string', format: 'date-time', example: '2025-06-07T14:30:00Z' },
+          category: { 
+            type: 'object',
+            properties: {
+              id: { type: 'number', example: 1 },
+              name: { type: 'string', example: 'Eletrônicos' }
+            }
+          }
+        }
+      }
+    }
+  })
+  @Get('recent')
+  getRecent() {
+    return this.productsService.getRecentProducts();
+  }
+
   @ApiOperation({ summary: 'Buscar um produto pelo ID' })
   @ApiParam({ name: 'id', description: 'ID do produto', example: 1 })
   @ApiOkResponse({ description: 'Produto encontrado' })
   @ApiResponse({ status: 404, description: 'Produto não encontrado' })
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.productsService.findOne(parseInt(id));
+    const parsedId = parseInt(id);
+    if (isNaN(parsedId)) {
+      throw new BadRequestException('ID inválido');
+    }
+    return this.productsService.findOne(parsedId);
   }
 
   @ApiOperation({ summary: 'Atualizar um produto' })
@@ -70,7 +105,11 @@ export class ProductsController {
   @UseGuards(JwtAuthGuard)
   @Put(':id')
   update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
-    return this.productsService.update(parseInt(id), updateProductDto);
+    const parsedId = parseInt(id);
+    if (isNaN(parsedId)) {
+      throw new BadRequestException('ID inválido');
+    }
+    return this.productsService.update(parsedId, updateProductDto);
   }
 
   @ApiOperation({ summary: 'Remover um produto' })
@@ -81,6 +120,10 @@ export class ProductsController {
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.productsService.remove(parseInt(id));
+    const parsedId = parseInt(id);
+    if (isNaN(parsedId)) {
+      throw new BadRequestException('ID inválido');
+    }
+    return this.productsService.remove(parsedId);
   }
 }

@@ -8,70 +8,321 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  name      String?
-  role      String   @default("user") // user ou admin
-  status    String   @default("active") // active ou inactive
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  orders    Order[]
+enum UserRole {
+  ADMIN
+  CUSTOMER
 }
 
-model Product {
-  id          Int           @id @default(autoincrement())
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum PaymentType {
+  BOLETO
+  CARD
+  PIX
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  OUT_OF_STOCK
+}
+
+model User {
+  id          Int          @id @default(autoincrement())
+  email       String       @unique(map: "User_email_key")
+  password    String
   name        String
-  description String?       @db.Text
-  price       Decimal       @db.Decimal(10, 2)
-  stock       Int           @default(0)
-  imageUrl    String?
-  categoryId  Int
-  category    Category      @relation(fields: [categoryId], references: [id])
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  orderItems  OrderItem[]
+  role        UserRole     @default(CUSTOMER)
+  status      UserStatus   @default(ACTIVE)
+  avatarUrl   String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime
+  cart        Cart?        @relation(name: "UserToCart", map: "Cart_userId_fkey")
+  addresses   Address[]    @relation(name: "UserToAddress", map: "Address_userId_fkey")
+  cartItems   CartItem[]   @relation(name: "UserToCartItem", map: "CartItem_userId_fkey")
+  orders      Order[]      @relation(name: "OrderToUser", map: "Order_userId_fkey")
+  payments    Payment[]    @relation(name: "PaymentToUser", map: "Payment_userId_fkey")
+  reviews     Review[]     @relation(name: "UserToReview", map: "Review_userId_fkey")
+  wishlist    Wishlist[]   @relation(name: "UserToWishlist", map: "Wishlist_userId_fkey")
+  customer    Customer?    @relation(name: "CustomerToUser", map: "Customer_userId_fkey")
+  reviewedBy  Review[]     @relation(name: "ReviewToUser", map: "Review_reviewedById_fkey")
+
+  @@index([email], map: "User_email_idx")
+}
+
+model Address {
+  id        Int        @id @default(autoincrement())
+  userId    Int
+  street    String
+  number    String
+  complement String?
+  district  String
+  city      String
+  state     String
+  country   String
+  zipCode   String
+  isDefault Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime
+  user      User       @relation(fields: [userId], references: [id], name: "AddressToUser", map: "Address_userId_fkey")
+  orders    Order[]    @relation(fields: [id], references: [addressId], name: "AddressToOrder", map: "Order_addressId_fkey")
+
+  @@index([userId], map: "Address_userId_idx")
+  @@unique([userId, street, number], map: "Address_userId_street_number_key")
+}
+
+model Boleto {
+  id        Int        @id @default(autoincrement())
+  paymentId Int        @unique(map: "Boleto_paymentId_key")
+  barcode   String
+  dueDate   DateTime
+  createdAt DateTime   @default(now())
+  updatedAt DateTime
+  payment   Payment    @relation(fields: [paymentId], references: [id], name: "BoletoToPayment", map: "Boleto_paymentId_fkey")
+  user      User       @relation(fields: [paymentId], references: [id], name: "BoletoToUser", map: "Boleto_userId_fkey")
+
+  @@index([paymentId], map: "Boleto_paymentId_idx")
+  @@unique([barcode], map: "Boleto_barcode_key")
+}
+
+model Card {
+  id        Int        @id @default(autoincrement())
+  paymentId Int        @unique(map: "Card_paymentId_key")
+  number    String
+  holderName String
+  expirationDate DateTime
+  cvv        String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime
+  payment   Payment    @relation(fields: [paymentId], references: [id], name: "CardToPayment", map: "Card_paymentId_fkey")
+  user      User       @relation(fields: [paymentId], references: [id], name: "CardToUser", map: "Card_userId_fkey")
+
+  @@index([paymentId], map: "Card_paymentId_idx")
+  @@unique([number], map: "Card_number_key")
+}
+
+model Payment {
+  id          Int          @id @default(autoincrement())
+  orderId     Int
+  status      PaymentStatus
+  type        PaymentType
+  amount      Decimal
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime
+  order       Order        @relation(fields: [orderId], references: [id], name: "PaymentToOrder", map: "Payment_orderId_fkey")
+  boleto      Boleto?      @relation(fields: [id], references: [paymentId], name: "PaymentToBoleto", map: "Boleto_paymentId_fkey")
+  card        Card?        @relation(fields: [id], references: [paymentId], name: "PaymentToCard", map: "Card_paymentId_fkey")
+  user        User         @relation(fields: [id], references: [id], name: "PaymentToUser", map: "Payment_userId_fkey")
+
+  @@index([orderId], map: "Payment_orderId_idx")
+}
+
+model Cart {
+  id        Int        @id @default(autoincrement())
+  userId    Int
+  items     CartItem[] @relation(fields: [id], references: [cartId], name: "CartToCartItem", map: "Cart_items_fkey")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime
+  user      User       @relation(fields: [userId], references: [id], name: "CartToUser", map: "Cart_userId_fkey")
+
+  @@index([userId], map: "Cart_userId_idx")
+  @@unique([userId], map: "Cart_userId_key")
+}
+
+model CartItem {
+  id        Int        @id @default(autoincrement())
+  cartId    Int
+  productId Int
+  orderId   Int?
+  userId    Int
+  quantity  Int
+  createdAt DateTime   @default(now())
+  updatedAt DateTime
+  cart      Cart       @relation(fields: [cartId], references: [id], name: "CartItemToCart", map: "CartItem_cartId_fkey")
+  product   Product    @relation(fields: [productId], references: [id], name: "CartItemToProduct", map: "CartItem_productId_fkey")
+  order     Order?     @relation(fields: [orderId], references: [id], name: "CartItemToOrder", map: "CartItem_orderId_fkey")
+  user      User       @relation(fields: [userId], references: [id], name: "CartItemToUser", map: "CartItem_userId_fkey")
+
+  @@index([cartId], map: "CartItem_cartId_idx")
+  @@index([productId], map: "CartItem_productId_idx")
+  @@index([orderId], map: "CartItem_orderId_idx")
+  @@index([userId], map: "CartItem_userId_idx")
+  @@unique([cartId, productId], map: "CartItem_cartId_productId_key")
 }
 
 model Category {
-  id        Int       @id @default(autoincrement())
-  name      String    @unique
-  products  Product[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-}
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  slug      String     @unique
+  parentId  Int?
+  products  Product[]  @relation(name: "CategoryToProduct", map: "Category_products_fkey")
+  parent    Category?  @relation(name: "CategoryToParentCategory", fields: [parentId], references: [id], map: "Category_parentId_fkey")
+  children  Category[] @relation(name: "CategoryToParentCategory")
 
-model Order {
-  id         Int         @id @default(autoincrement())
-  userId     Int
-  user       User        @relation(fields: [userId], references: [id])
-  customerId Int?
-  customer   Customer?   @relation(fields: [customerId], references: [id])
-  status     String      @default("pending") // pending, processing, completed, cancelled
-  total      Decimal     @db.Decimal(10, 2)
-  items      OrderItem[]
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-}
-
-model OrderItem {
-  id        Int     @id @default(autoincrement())
-  orderId   Int
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId Int
-  product   Product @relation(fields: [productId], references: [id])
-  quantity  Int
-  price     Decimal @db.Decimal(10, 2)
+  @@index([parentId], map: "Category_parentId_idx")
 }
 
 model Customer {
   id        Int      @id @default(autoincrement())
   name      String
-  email     String   @unique
+  email     String   @unique(map: "Customer_email_key")
   phone     String?
   address   String?
-  orders    Order[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  userId    Int
+  createdAt DateTime   @default(now())
+  updatedAt DateTime
+  user      User       @relation(fields: [userId], references: [id], name: "CustomerToUser", map: "Customer_userId_fkey")
+  orders    Order[]    @relation(name: "OrderToCustomer", map: "Order_customerId_fkey")
+
+  @@index([userId], map: "Customer_userId_idx")
+  @@unique([userId], map: "Customer_userId_key")
+}
+
+model Order {
+  id          Int        @id @default(autoincrement())
+  customerId  Int
+  addressId   Int
+  status      OrderStatus
+  total       Decimal
+  items       CartItem[] @relation(fields: [id], references: [orderId], name: "OrderToCartItem", map: "Order_items_fkey")
+  payment     Payment?   @relation(fields: [id], references: [orderId], name: "OrderToPayment", map: "Order_payment_fkey")
+  orderItems  OrderItem[] @relation(fields: [id], references: [orderId], name: "OrderToOrderItem", map: "Order_orderItems_fkey")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime
+  customer    Customer   @relation(fields: [customerId], references: [id], name: "OrderToCustomer", map: "Order_customerId_fkey")
+  address     Address    @relation(fields: [addressId], references: [id], name: "OrderToAddress", map: "Order_addressId_fkey")
+
+  @@index([customerId], map: "Order_customerId_idx")
+  @@index([addressId], map: "Order_addressId_idx")
+}
+
+model OrderItem {
+  id        Int        @id @default(autoincrement())
+  orderId   Int
+  productId Int
+  quantity  Int
+  price     Decimal
+  createdAt DateTime   @default(now())
+  updatedAt DateTime
+  order     Order      @relation(fields: [orderId], references: [id], name: "OrderItemToOrder", map: "OrderItem_orderId_fkey")
+  product   Product    @relation(fields: [productId], references: [id], name: "OrderItemToProduct", map: "OrderItem_productId_fkey")
+
+  @@index([orderId], map: "OrderItem_orderId_idx")
+  @@index([productId], map: "OrderItem_productId_idx")
+  @@unique([orderId, productId], map: "OrderItem_orderId_productId_key")
+}
+
+model Payment {
+  id        Int        @id @default(autoincrement())
+  orderId   Int
+  userId    Int
+  amount    Decimal
+  status    PaymentStatus
+  type      PaymentType
+  createdAt DateTime   @default(now())
+  updatedAt DateTime
+  order     Order?     @relation(fields: [orderId], references: [id], name: "PaymentToOrder", map: "Payment_orderId_fkey")
+  user      User       @relation(fields: [userId], references: [id], name: "PaymentToUser", map: "Payment_userId_fkey")
+  boleto    Boleto?    @relation(fields: [id], references: [paymentId], name: "PaymentToBoleto", map: "Boleto_paymentId_fkey")
+  card      Card?      @relation(fields: [id], references: [paymentId], name: "PaymentToCard", map: "Card_paymentId_fkey")
+
+  @@index([orderId], map: "Payment_orderId_idx")
+  @@index([userId], map: "Payment_userId_idx")
+  @@unique([orderId], map: "Payment_orderId_key")
+}
+
+model Pix {
+  id        Int        @id @default(autoincrement())
+  qrcode    String
+  expiresAt DateTime
+  createdAt DateTime   @default(now())
+  updatedAt DateTime
+  paymentId Int        @unique(map: "Pix_paymentId_key")
+  payment   Payment    @relation(fields: [paymentId], references: [id], name: "PixToPayment", map: "Pix_paymentId_fkey")
+
+  @@index([paymentId], map: "Pix_paymentId_idx")
+}
+
+model Product {
+  id          Int          @id @default(autoincrement())
+  name        String
+  description String
+  price       Decimal
+  stock       Int
+  status      ProductStatus
+  categoryId  Int
+  ownerId     Int
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime
+  category    Category     @relation(fields: [categoryId], references: [id], name: "ProductToCategory", map: "Product_categoryId_fkey")
+  reviews     Review[]     @relation(name: "ProductToReview", map: "Review_productId_fkey")
+  cartItems   CartItem[]   @relation(name: "ProductToCartItem", map: "CartItem_productId_fkey")
+  orderItems  OrderItem[]  @relation(name: "ProductToOrderItem", map: "OrderItem_productId_fkey")
+  wishlist    Wishlist[]   @relation(name: "ProductToWishlist", map: "Wishlist_productId_fkey")
+  owner       User         @relation(fields: [ownerId], references: [id], name: "ProductToUser", map: "Product_ownerId_fkey")
+  images      ProductImage[] @relation(name: "ProductToImage", map: "ProductImage_productId_fkey")
+
+  @@index([categoryId], map: "Product_categoryId_idx")
+  @@index([ownerId], map: "Product_ownerId_idx")
+  @@unique([ownerId], map: "Product_ownerId_key")
+}
+
+model ProductImage {
+  id        Int        @id @default(autoincrement())
+  productId Int
+  url       String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime
+  product   Product    @relation(fields: [productId], references: [id], name: "ProductImageToProduct", map: "ProductImage_productId_fkey")
+
+  @@index([productId], map: "ProductImage_productId_idx")
+  @@unique([productId, url], map: "ProductImage_productId_url_key")
+}
+
+model Review {
+  id        Int        @id @default(autoincrement())
+  productId Int
+  userId    Int
+  rating    Int
+  comment   String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime
+  product   Product    @relation(fields: [productId], references: [id], name: "ReviewToProduct", map: "Review_productId_fkey")
+  user      User       @relation(fields: [userId], references: [id], name: "ReviewToUser", map: "Review_userId_fkey")
+
+  @@index([userId], map: "Review_userId_idx")
+  @@index([productId], map: "Review_productId_idx")
+  @@unique([userId, productId], map: "Review_userId_productId_key")
+}
+
+model Wishlist {
+  id        Int        @id @default(autoincrement())
+  userId    Int
+  productId Int
+  createdAt DateTime   @default(now())
+  updatedAt DateTime
+  user      User       @relation(fields: [userId], references: [id], name: "UserToWishlist", map: "Wishlist_userId_fkey")
+  product   Product    @relation(fields: [productId], references: [id], name: "ProductToWishlist", map: "Wishlist_productId_fkey")
+
+  @@index([userId], map: "Wishlist_userId_idx")
+  @@index([productId], map: "Wishlist_productId_idx")
+  @@unique([userId, productId], map: "Wishlist_userId_productId_key")
 }

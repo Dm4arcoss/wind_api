@@ -13,6 +13,11 @@ class OrderItemDto {
   @IsNotEmpty()
   @Min(1)
   quantity: number;
+
+  @ApiProperty({ example: 9.99, description: 'Preço do produto' })
+  @IsNumber()
+  @IsNotEmpty()
+  price: number;
 }
 
 export class CreateOrderDto {

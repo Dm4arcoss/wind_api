@@ -3,10 +3,11 @@ import Home from '../views/Home.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 import Profile from '../views/Profile.vue'
-import Dashboard from '../views/Dashboard.vue'
 import Test from '../views/Test.vue'
 import TestProductList from '../views/products/TestProductList.vue'
 import TestAlias from '../views/TestAlias.vue'
+import Dashboard from '../views/Dashboard.vue'
+import NewOrder from '../views/NewOrder.vue'
 
 // Novas páginas
 import ProductList from '../views/products/ProductList.vue'
@@ -43,14 +44,20 @@ const routes = [
     component: Profile,
     meta: { requiresAuth: true }
   },
-  
-  // Dashboard
   {
     path: '/dashboard',
     name: 'Dashboard',
     component: Dashboard,
     meta: { requiresAuth: true }
   },
+  {
+    path: '/dashboard/orders/new',
+    name: 'NewOrder',
+    component: NewOrder,
+    meta: { requiresAuth: true }
+  },
+  
+
   
   // Produtos
   {

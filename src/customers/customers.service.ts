@@ -7,10 +7,15 @@ import { UpdateCustomerDto } from './dto/update-customer.dto';
 export class CustomersService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createCustomerDto: CreateCustomerDto) {
+  async create(createCustomerDto: CreateCustomerDto, userId: number) {
     try {
       return await this.prisma.customer.create({
-        data: createCustomerDto,
+        data: {
+          ...createCustomerDto,
+          user: {
+            connect: { id: userId }
+          }
+        },
       });
     } catch (error) {
       if (error.code === 'P2002') {

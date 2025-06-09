@@ -2,28 +2,21 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
-import { Prisma } from '../../generated/prisma';
+import { OrderStatus } from './order.enum';
 
 @Injectable()
 export class OrdersService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createOrderDto: CreateOrderDto) {
-    const { userId, customerId, items } = createOrderDto;
-
-    // Verificar se o usuário existe
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      throw new NotFoundException(`Usuário com ID ${userId} não encontrado`);
-    }
+  async create(createOrderDto: CreateOrderDto): Promise<any> {
+    const { customerId, items } = createOrderDto;
+    const userId = createOrderDto.userId;
 
     // Verificar se o cliente existe (se fornecido)
     if (customerId) {
       const customer = await this.prisma.customer.findUnique({
         where: { id: customerId },
+        select: { id: true }
       });
 
       if (!customer) {
@@ -31,11 +24,11 @@ export class OrdersService {
       }
     }
 
-    // Buscar produtos e calcular total
+    // Buscar produtos e verificar estoque
     const productIds = items.map(item => item.productId);
     const products = await this.prisma.product.findMany({
       where: {
-        id: { in: productIds },
+        id: { in: productIds }
       },
     });
 
@@ -43,10 +36,8 @@ export class OrdersService {
       throw new NotFoundException('Um ou mais produtos não foram encontrados');
     }
 
-    // Verificar estoque e calcular total
+    // Calcular total do pedido
     let total = 0;
-    const orderItems: { productId: number; quantity: number; price: Prisma.Decimal }[] = [];
-
     for (const item of items) {
       const product = products.find(p => p.id === item.productId);
       
@@ -58,99 +49,53 @@ export class OrdersService {
         throw new BadRequestException(`Produto ${product.name} não tem estoque suficiente`);
       }
 
-      const itemPrice = parseFloat(product.price.toString()) * item.quantity;
-      total += itemPrice;
-
-      orderItems.push({
-        productId: item.productId,
-        quantity: item.quantity,
-        price: product.price,
-      });
+      total += item.price * item.quantity;
     }
 
-    // Criar pedido com itens em uma transação
-    const order = await this.prisma.$transaction(async (prisma) => {
-      // Criar o pedido
-      const newOrder = await prisma.order.create({
-        data: {
-          userId,
-          customerId,
-          total: total as any,
-          status: 'pending',
-          items: {
-            create: orderItems,
-          },
-        },
-        include: {
-          items: {
-            include: {
-              product: true,
-            },
-          },
-          user: true,
-          customer: true,
-        },
-      });
-
-      // Atualizar estoque dos produtos
-      for (const item of items) {
-        await prisma.product.update({
-          where: { id: item.productId },
-          data: {
-            stock: {
-              decrement: item.quantity,
-            },
-          },
-        });
+    // Criar o pedido
+    return this.prisma.order.create({
+      data: {
+        userId,
+        customerId: customerId || null,
+        total,
+        status: OrderStatus.PENDING,
+        items: {
+          create: items.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.price,
+          }))
+        }
+      },
+      include: {
+        items: true,
+        user: true,
+        customer: true
       }
-
-      return newOrder;
     });
-
-    return order;
   }
 
-  async findAll() {
+  async findAll(): Promise<any[]> {
     return this.prisma.order.findMany({
       include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        customer: true,
-        items: {
-          include: {
-            product: true,
-          },
-        },
+        items: true,
+        user: true,
+        customer: true
       },
       orderBy: {
-        createdAt: 'desc',
-      },
+        createdAt: 'desc'
+      }
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: number): Promise<any> {
     const order = await this.prisma.order.findUnique({
       where: { id },
       include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        customer: true,
-        items: {
-          include: {
-            product: true,
-          },
-        },
-      },
+        items: true,
+        user: true,
+        customer: true
+      }
     });
 
     if (!order) {
@@ -160,7 +105,7 @@ export class OrdersService {
     return order;
   }
 
-  async update(id: number, updateOrderDto: UpdateOrderDto) {
+  async update(id: number, updateOrderDto: UpdateOrderDto): Promise<any> {
     try {
       return await this.prisma.order.update({
         where: { id },
@@ -186,7 +131,7 @@ export class OrdersService {
     }
   }
 
-  async findByUser(userId: number) {
+  async findByUser(userId: number): Promise<any[]> {
     return this.prisma.order.findMany({
       where: { userId },
       include: {
@@ -203,7 +148,7 @@ export class OrdersService {
     });
   }
   
-  async findByCustomer(customerId: number) {
+  async findByCustomer(customerId: number): Promise<any[]> {
     return this.prisma.order.findMany({
       where: { customerId },
       include: {

@@ -13,9 +13,9 @@ export class CreateCustomerDto {
   email: string;
 
   @ApiProperty({ example: '(11) 98765-4321', description: 'Telefone do cliente' })
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  phone?: string;
+  phone: string;
 
   @ApiProperty({ example: 'Rua Exemplo, 123', description: 'Endereço do cliente' })
   @IsOptional()

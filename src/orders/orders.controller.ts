@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Put, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, UseGuards, Request } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto, OrderStatus } from './dto/update-order.dto';
@@ -19,11 +19,11 @@ export class OrdersController {
   @ApiResponse({ status: 404, description: 'Usuário, cliente ou produto não encontrado' })
   @ApiBody({ type: CreateOrderDto })
   @Post()
-  create(@Body() createOrderDto: CreateOrderDto) {
-    return this.ordersService.create(createOrderDto);
+  create(@Body() createOrderDto: CreateOrderDto, @Request() req) {
+    return this.ordersService.create({ ...createOrderDto, userId: req.user.id });
   }
 
-  @ApiOperation({ summary: 'Listar todos os pedidos' })
+  @ApiOperation({ summary: 'Listar todos os pedidos do usuário' })
   @ApiOkResponse({ 
     description: 'Lista de pedidos retornada com sucesso',
     schema: {

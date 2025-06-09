@@ -8,9 +8,9 @@ export class CreateProductDto {
   name: string;
 
   @ApiProperty({ example: 'Smartphone com 128GB de memória', description: 'Descrição do produto' })
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  description?: string;
+  description: string;
 
   @ApiProperty({ example: 999.99, description: 'Preço do produto' })
   @IsNotEmpty()

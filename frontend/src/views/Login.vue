@@ -55,7 +55,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import api from '../services/api'
 
 export default {
   name: 'Login',
@@ -82,7 +82,7 @@ export default {
           password: '****'
         })
         
-        const response = await axios.post('http://localhost:3001/auth/login', {
+        const response = await api.post('/auth/login', {
           email: this.email.trim().toLowerCase(),
           password: this.password
         })
@@ -93,6 +93,7 @@ export default {
           localStorage.setItem('token', response.data.access_token)
           if (response.data.user) {
             localStorage.setItem('user', JSON.stringify(response.data.user))
+            localStorage.setItem('userId', response.data.user.id)  // Salvando o userId
           }
           this.$router.push('/')
         } else {

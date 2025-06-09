@@ -1,5 +1,5 @@
 <template>
-  <div ref="chartContainer" class="w-full h-full"></div>
+  <canvas ref="chartCanvas" class="w-full h-full"></canvas>
 </template>
 
 <script setup>
@@ -17,12 +17,13 @@ const props = defineProps({
   }
 })
 
-const chartContainer = ref(null)
+const chartCanvas = ref(null)
 let chartInstance = null
 
 onMounted(() => {
-  if (chartContainer.value) {
-    chartInstance = new Chart(chartContainer.value, {
+  if (chartCanvas.value) {
+    const ctx = chartCanvas.value.getContext('2d')
+    chartInstance = new Chart(ctx, {
       type: 'line',
       data: props.data,
       options: props.options

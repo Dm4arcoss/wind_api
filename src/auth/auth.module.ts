@@ -9,14 +9,17 @@ import { JWT_SECRET, JWT_EXPIRES_IN } from './constants';
 
 @Module({
   imports: [
-    PassportModule,
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: JWT_SECRET,
-      signOptions: { expiresIn: JWT_EXPIRES_IN },
+      signOptions: { 
+        expiresIn: JWT_EXPIRES_IN,
+        algorithm: 'HS256'
+      },
     }),
   ],
   controllers: [AuthController],
   providers: [AuthService, LocalStrategy, JwtStrategy],
-  exports: [AuthService],
+  exports: [AuthService, JwtModule],
 })
 export class AuthModule {}

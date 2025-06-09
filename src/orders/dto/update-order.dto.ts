@@ -3,15 +3,16 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export enum OrderStatus {
   PENDING = 'pending',
-  PROCESSING = 'processing',
-  COMPLETED = 'completed',
-  CANCELLED = 'cancelled',
+  PAID = 'paid',
+  SHIPPED = 'shipped',
+  DELIVERED = 'delivered',
+  CANCELLED = 'cancelled'
 }
 
 export class UpdateOrderDto {
   @ApiProperty({ 
     enum: OrderStatus, 
-    example: OrderStatus.PROCESSING,
+    example: OrderStatus.PAID,
     description: 'Status do pedido',
     enumName: 'OrderStatus'
   })

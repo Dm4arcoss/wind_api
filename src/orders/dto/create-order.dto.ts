@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsArray, ValidateNested, Min, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsArray, ValidateNested, Min, IsPositive, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -13,27 +13,45 @@ class OrderItemDto {
   @IsNotEmpty()
   @Min(1)
   quantity: number;
-
-  @ApiProperty({ example: 9.99, description: 'Preço do produto' })
-  @IsNumber()
-  @IsNotEmpty()
-  price: number;
 }
 
 export class CreateOrderDto {
-  @ApiProperty({ example: 1, description: 'ID do usuário' })
-  @IsNumber()
-  @IsNotEmpty()
-  userId: number;
-
-  @ApiProperty({ example: 1, description: 'ID do cliente (opcional)', required: false })
-  @IsNumber()
+  @ApiProperty({
+    description: 'ID do usuário',
+    example: 1
+  })
   @IsOptional()
-  customerId?: number;
+  @IsNumber()
+  @IsPositive()
+  userId?: number;
 
-  @ApiProperty({ type: [OrderItemDto], description: 'Itens do pedido' })
+  @ApiProperty({
+    description: 'ID do cliente',
+    example: 1
+  })
+  @IsNumber()
+  @IsPositive()
+  customerId: number;
+
+  @ApiProperty({
+    description: 'ID do endereço',
+    example: 1
+  })
+  @IsNumber()
+  @IsPositive()
+  addressId: number;
+
+  @ApiProperty({
+    description: 'Valor total do pedido',
+    example: 199.98
+  })
+  @IsNumber()
+  @IsPositive()
+  amount: number;
+
+  @ApiProperty({ type: OrderItemDto, isArray: true, description: 'Itens do pedido' })
   @IsArray()
-  @ValidateNested({ each: true })
+  @ValidateNested()
   @Type(() => OrderItemDto)
   items: OrderItemDto[];
 }

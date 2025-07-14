@@ -7,6 +7,11 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 export class CategoriesService {
   constructor(private prisma: PrismaService) {}
 
+  async count() {
+    const count = await this.prisma.category.count();
+    return { count };
+  }
+
   async create(createCategoryDto: CreateCategoryDto) {
     try {
       return await this.prisma.category.create({
@@ -25,7 +30,7 @@ export class CategoriesService {
       include: {
         _count: {
           select: {
-            products: true,
+            product: true,
           },
         },
       },
@@ -36,10 +41,10 @@ export class CategoriesService {
     const category = await this.prisma.category.findUnique({
       where: { id },
       include: {
-        products: true,
+        product: true,
         _count: {
           select: {
-            products: true,
+            product: true,
           },
         },
       },

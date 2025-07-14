@@ -10,16 +10,22 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery, 
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
-  @ApiOperation({ summary: 'Criar um novo produto' })
-  @ApiBody({ type: CreateProductDto })
-  @ApiResponse({ status: 201, description: 'Produto criado com sucesso' })
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
-  @Post()
-  create(@Body() createProductDto: CreateProductDto) {
-    return this.productsService.create(createProductDto);
+  @Get('count')
+  @ApiOperation({ summary: 'Contar total de produtos' })
+  @ApiOkResponse({ 
+    description: 'Total de produtos retornados com sucesso',
+    schema: {
+      type: 'object',
+      properties: {
+        count: { type: 'number', example: 100 }
+      }
+    }
+  })
+  async count() {
+    return this.productsService.count();
   }
 
+  @Get()
   @ApiOperation({ summary: 'Listar todos os produtos' })
   @ApiQuery({ name: 'categoryId', required: false, description: 'Filtrar por categoria', example: 1 })
   @ApiOkResponse({ 
@@ -47,11 +53,42 @@ export class ProductsController {
       }
     }
   })
-  @Get()
-  findAll(@Query('categoryId') categoryId?: string) {
+  async findAll(@Query('categoryId') categoryId?: string) {
     return this.productsService.findAll(categoryId ? parseInt(categoryId) : undefined);
   }
 
+  @Post()
+  @ApiOperation({ summary: 'Criar um novo produto' })
+  @ApiBody({ type: CreateProductDto })
+  @ApiOkResponse({ 
+    description: 'Produto criado com sucesso',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'number', example: 1 },
+        name: { type: 'string', example: 'Smartphone XYZ' },
+        description: { type: 'string', example: 'Smartphone com 128GB de memória', nullable: true },
+        price: { type: 'number', example: 1299.99 },
+        stock: { type: 'number', example: 15 },
+        imageUrl: { type: 'string', example: 'https://exemplo.com/imagem.jpg', nullable: true },
+        createdAt: { type: 'string', format: 'date-time', example: '2025-06-07T14:30:00Z' },
+        category: { 
+          type: 'object',
+          properties: {
+            id: { type: 'number', example: 1 },
+            name: { type: 'string', example: 'Eletrônicos' }
+          }
+        }
+      }
+    }
+  })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  async create(@Body() createProductDto: CreateProductDto) {
+    return this.productsService.create(createProductDto);
+  }
+
+  @Get('recent')
   @ApiOperation({ summary: 'Listar produtos recentes' })
   @ApiOkResponse({ 
     description: 'Lista de produtos recentes retornada com sucesso',
@@ -78,17 +115,36 @@ export class ProductsController {
       }
     }
   })
-  @Get('recent')
-  getRecent() {
+  async getRecentProducts() {
     return this.productsService.getRecentProducts();
   }
 
-  @ApiOperation({ summary: 'Buscar um produto pelo ID' })
-  @ApiParam({ name: 'id', description: 'ID do produto', example: 1 })
-  @ApiOkResponse({ description: 'Produto encontrado' })
-  @ApiResponse({ status: 404, description: 'Produto não encontrado' })
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  @ApiOperation({ summary: 'Buscar produto por ID' })
+  @ApiParam({ name: 'id', description: 'ID do produto', example: 1 })
+  @ApiOkResponse({ 
+    description: 'Produto encontrado com sucesso',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'number', example: 1 },
+        name: { type: 'string', example: 'Smartphone XYZ' },
+        description: { type: 'string', example: 'Smartphone com 128GB de memória', nullable: true },
+        price: { type: 'number', example: 1299.99 },
+        stock: { type: 'number', example: 15 },
+        imageUrl: { type: 'string', example: 'https://exemplo.com/imagem.jpg', nullable: true },
+        createdAt: { type: 'string', format: 'date-time', example: '2025-06-07T14:30:00Z' },
+        category: { 
+          type: 'object',
+          properties: {
+            id: { type: 'number', example: 1 },
+            name: { type: 'string', example: 'Eletrônicos' }
+          }
+        }
+      }
+    }
+  })
+  async findOne(@Param('id') id: string) {
     const parsedId = parseInt(id);
     if (isNaN(parsedId)) {
       throw new BadRequestException('ID inválido');
@@ -96,15 +152,35 @@ export class ProductsController {
     return this.productsService.findOne(parsedId);
   }
 
-  @ApiOperation({ summary: 'Atualizar um produto' })
+  @Put(':id')
+  @ApiOperation({ summary: 'Atualizar produto' })
   @ApiParam({ name: 'id', description: 'ID do produto', example: 1 })
   @ApiBody({ type: UpdateProductDto })
-  @ApiOkResponse({ description: 'Produto atualizado com sucesso' })
-  @ApiResponse({ status: 404, description: 'Produto não encontrado' })
+  @ApiOkResponse({ 
+    description: 'Produto atualizado com sucesso',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'number', example: 1 },
+        name: { type: 'string', example: 'Smartphone XYZ' },
+        description: { type: 'string', example: 'Smartphone com 128GB de memória', nullable: true },
+        price: { type: 'number', example: 1299.99 },
+        stock: { type: 'number', example: 15 },
+        imageUrl: { type: 'string', example: 'https://exemplo.com/imagem.jpg', nullable: true },
+        createdAt: { type: 'string', format: 'date-time', example: '2025-06-07T14:30:00Z' },
+        category: { 
+          type: 'object',
+          properties: {
+            id: { type: 'number', example: 1 },
+            name: { type: 'string', example: 'Eletrônicos' }
+          }
+        }
+      }
+    }
+  })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  @Put(':id')
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
+  async update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
     const parsedId = parseInt(id);
     if (isNaN(parsedId)) {
       throw new BadRequestException('ID inválido');
@@ -112,14 +188,15 @@ export class ProductsController {
     return this.productsService.update(parsedId, updateProductDto);
   }
 
-  @ApiOperation({ summary: 'Remover um produto' })
+  @Delete(':id')
+  @ApiOperation({ summary: 'Excluir produto' })
   @ApiParam({ name: 'id', description: 'ID do produto', example: 1 })
-  @ApiOkResponse({ description: 'Produto removido com sucesso' })
-  @ApiResponse({ status: 404, description: 'Produto não encontrado' })
+  @ApiOkResponse({ 
+    description: 'Produto excluído com sucesso'
+  })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  @Delete(':id')
-  remove(@Param('id') id: string) {
+  async remove(@Param('id') id: string) {
     const parsedId = parseInt(id);
     if (isNaN(parsedId)) {
       throw new BadRequestException('ID inválido');

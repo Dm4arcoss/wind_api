@@ -85,6 +85,7 @@
                   v-model="form.phone"
                   type="text"
                   class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  required
                 />
               </div>
               <div>
@@ -115,6 +116,7 @@
 import customersService from '../services/customers';
 import { ref, onMounted } from 'vue';
 
+// Estado
 const customers = ref([]);
 const showCreateModal = ref(false);
 const showEditModal = ref(false);
@@ -125,6 +127,25 @@ const form = ref({
   phone: '',
   address: ''
 });
+
+// Funções auxiliares
+const validateForm = () => {
+  if (!form.value.name.trim()) {
+    alert('O nome do cliente é obrigatório');
+    return false;
+  }
+  if (!form.value.email.trim()) {
+    alert('O email do cliente é obrigatório');
+    return false;
+  }
+  if (!form.value.phone.trim()) {
+    alert('O telefone do cliente é obrigatório');
+    return false;
+  }
+  return true;
+};
+
+// Funções principais
 
 const loadCustomers = async () => {
   try {
@@ -138,13 +159,69 @@ const loadCustomers = async () => {
 
 const createCustomer = async () => {
   try {
-    await customersService.create(form.value);
-    alert('Cliente criado com sucesso');
+    // Verificar se o usuário está autenticado
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Você precisa estar logado para criar um cliente');
+      return;
+    }
+
+    // Validar dados antes de enviar
+    if (!form.value.name?.trim()) {
+      alert('O nome do cliente é obrigatório');
+      return;
+    }
+    if (!form.value.email?.trim()) {
+      alert('O email do cliente é obrigatório');
+      return;
+    }
+    if (!form.value.phone?.trim()) {
+      alert('O telefone do cliente é obrigatório');
+      return;
+    }
+
+    // Validar formato do email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.value.email)) {
+      alert('Por favor, insira um email válido');
+      return;
+    }
+
+    // Validar formato do telefone (aceita números e caracteres especiais)
+    const phoneRegex = /^[\d\s\(\)\-\+\.]*$/;
+    if (!phoneRegex.test(form.value.phone)) {
+      alert('Por favor, insira um telefone válido');
+      return;
+    }
+
+    // Remover espaços em branco
+    form.value.name = form.value.name.trim();
+    form.value.email = form.value.email.trim();
+    form.value.phone = form.value.phone.trim();
+
+    const response = await customersService.create(form.value);
+    
+    // Verificar se o cliente já existia
+    if (response.data?.message === 'Cliente já existe para este usuário') {
+      alert('Você já possui um perfil de cliente cadastrado. Os dados foram atualizados.');
+    } else {
+      alert('Cliente criado com sucesso');
+    }
+    
     closeModal();
     loadCustomers();
   } catch (error) {
-    alert('Erro ao criar cliente');
-    console.error('Erro ao criar cliente:', error);
+    console.error('❌ Erro ao criar cliente:', error);
+    
+    if (error.message === 'Usuário não autenticado') {
+      alert('Você precisa estar logado para criar um cliente');
+    } else if (error.response?.data?.message) {
+      alert(error.response.data.message);
+    } else if (error.message) {
+      alert(error.message);
+    } else {
+      alert('Erro ao criar cliente. Por favor, verifique os dados e tente novamente.');
+    }
   }
 };
 

@@ -3,6 +3,7 @@
     <div class="flex justify-between items-center mb-4">
       <h1 class="text-2xl font-bold">Produtos</h1>
       <router-link to="/dashboard/products/new" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+        <i class="fas fa-plus mr-2"></i>
         Novo Produto
       </router-link>
     </div>
@@ -36,7 +37,7 @@
               <td class="px-6 py-4">{{ product.categoryName }}</td>
               <td class="px-6 py-4">R$ {{ product.price }}</td>
               <td class="px-6 py-4">
-                <router-link :to="`/products/${product.id}/edit`" class="text-blue-500 hover:text-blue-700 mr-2">
+                <router-link :to="`/dashboard/products/${product.id}/edit`" class="text-blue-500 hover:text-blue-700 mr-2">
                   Editar
                 </router-link>
                 <button @click="deleteProduct(product.id)" class="text-red-500 hover:text-red-700">
@@ -55,6 +56,7 @@
 import { ref, onMounted } from 'vue';
 import productsService from '@/services/products';
 import categoriesService from '@/services/categories';
+import ProductForm from './ProductForm.vue';
 
 const products = ref([]);
 const categories = ref([]);

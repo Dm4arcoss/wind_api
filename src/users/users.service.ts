@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException, ConflictException, 
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { validate } from 'class-validator';
+import { UserStatus, UserRole } from '../auth/dto/user.enum';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -38,8 +39,8 @@ export class UsersService {
         name: createUserDto.name,
         email: createUserDto.email.toLowerCase(),
         password: await this.hashPassword(createUserDto.password),
-        status: 'active',
-        role: 'admin'  // Definir como admin por padrão
+        status: UserStatus.ACTIVE,
+        role: UserRole.ADMIN  // Definir como admin por padrão
       };
 
       console.log('Dados para criação:', JSON.stringify(userData, null, 2));

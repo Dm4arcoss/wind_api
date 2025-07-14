@@ -200,20 +200,9 @@ const removeProduct = (productId) => {
 const finalizeOrder = async () => {
   try {
     // Verificar se o usuário está logado
-    const userId = localStorage.getItem('userId')
-    if (!userId) {
+    const token = localStorage.getItem('token')
+    if (!token) {
       alert('Você precisa fazer login para criar um pedido. Redirecionando para a página de login...')
-      // Redirecionar para login
-      window.location.href = '/login'
-      return
-    }
-
-    // Verificar se o userId é um número válido
-    const userIdNumber = Number(userId)
-    if (isNaN(userIdNumber)) {
-      alert('ID do usuário inválido. Por favor, faça login novamente.')
-      localStorage.removeItem('userId')
-      localStorage.removeItem('token')
       window.location.href = '/login'
       return
     }
@@ -226,18 +215,35 @@ const finalizeOrder = async () => {
     isLoading.value = true
     hasError.value = false
 
-    // Criar o objeto de pedido com os produtos corretos
-    const order = {
-      userId: userIdNumber, // Usar o userId convertido
-      customerId: Number(selectedClient.value),
-      items: cartItems.value.map(item => ({
+    console.log('🔧 Preparando dados do pedido...')
+    console.log('Cliente selecionado:', selectedClient.value)
+    console.log('Itens do carrinho:', cartItems.value)
+
+    // Calcular o total do pedido
+    const orderTotal = cartItems.value.reduce((sum, item) => {
+      const product = productsStore.products.find(p => p.id === item.productId)
+      return sum + (product?.price || 0) * item.quantity
+    }, 0)
+
+    console.log('💰 Total do pedido:', orderTotal)
+
+    // Preparar os itens do pedido com preços
+    const orderItems = cartItems.value.map(item => {
+      const product = productsStore.products.find(p => p.id === item.productId)
+      if (!product) {
+        throw new Error(`Produto com ID ${item.productId} não encontrado`)
+      }
+      
+      return {
         productId: Number(item.productId),
         quantity: Number(item.quantity)
-      }))
-    }
+      }
+    })
+
+    console.log('📦 Itens do pedido:', orderItems)
 
     // Verificar se todos os produtos existem antes de enviar
-    const missingProducts = order.items.filter(item => {
+    const missingProducts = orderItems.filter(item => {
       const product = productsStore.products.find(p => p.id === item.productId)
       return !product
     })
@@ -248,7 +254,7 @@ const finalizeOrder = async () => {
     }
 
     // Verificar se o estoque é suficiente
-    const insufficientStock = order.items.some(item => {
+    const insufficientStock = orderItems.some(item => {
       const product = productsStore.products.find(p => p.id === item.productId)
       return product && product.stock < item.quantity
     })
@@ -258,30 +264,58 @@ const finalizeOrder = async () => {
       return
     }
 
+    // Buscar o cliente para obter o endereço
+    const selectedCustomer = clients.value.find(c => c.id === selectedClient.value)
+    if (!selectedCustomer) {
+      alert('Cliente selecionado não encontrado. Por favor, selecione um cliente válido.')
+      return
+    }
+
+    // Criar o objeto de pedido completo
+    const order = {
+      customerId: Number(selectedClient.value),
+      addressId: 1, // Endereço padrão - você pode implementar seleção de endereço depois
+      amount: orderTotal,
+      items: orderItems
+    }
+
+    console.log('📋 Dados do pedido a serem enviados:', order)
+
     const response = await api.post('/orders', order)
-    console.log('Pedido criado:', response.data)
+    console.log('✅ Pedido criado com sucesso:', response.data)
 
     alert('Pedido criado com sucesso!')
     cartStore.clearCart()
-    selectedClient.value = ''
+    selectedClient.value = null
   } catch (error) {
-    console.error('Erro ao criar pedido:', error)
+    console.error('❌ Erro ao criar pedido:', error)
     hasError.value = true
     
     // Tratamento de erros específicos
     if (error.response?.status === 400) {
-      if (error.response.data?.message?.includes('estoque')) {
+      const errorMessage = error.response.data?.message || 'Dados inválidos'
+      console.error('❌ Detalhes do erro 400:', error.response.data)
+      
+      if (errorMessage.includes('estoque')) {
         alert('Estoque insuficiente para alguns produtos. Por favor, ajuste as quantidades.')
+      } else if (errorMessage.includes('addressId')) {
+        alert('Erro com endereço. Por favor, verifique as informações do cliente.')
+      } else if (errorMessage.includes('amount')) {
+        alert('Erro no cálculo do valor total. Por favor, tente novamente.')
       } else {
-        alert('Dados inválidos. Por favor, verifique as informações e tente novamente.')
+        alert(`Dados inválidos: ${errorMessage}`)
       }
     } else if (error.response?.status === 404) {
       alert('Usuário, cliente ou produto não encontrado. Por favor, verifique as informações e tente novamente.')
+    } else if (error.response?.status === 401) {
+      alert('Sessão expirada. Por favor, faça login novamente.')
+      localStorage.removeItem('token')
+      window.location.href = '/login'
     } else {
       alert('Erro ao criar pedido. Por favor, tente novamente.')
     }
     
-    console.error('Detalhes do erro:', error.response?.data)
+    console.error('❌ Detalhes completos do erro:', error.response?.data)
   } finally {
     isLoading.value = false
   }

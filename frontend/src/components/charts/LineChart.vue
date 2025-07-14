@@ -3,8 +3,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import Chart from 'chart.js/auto'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { Chart, registerables } from 'chart.js'
+
+Chart.register(...registerables)
 
 const props = defineProps({
   data: {
@@ -20,7 +22,11 @@ const props = defineProps({
 const chartCanvas = ref(null)
 let chartInstance = null
 
-onMounted(() => {
+const updateChart = () => {
+  if (chartInstance) {
+    chartInstance.destroy()
+  }
+  
   if (chartCanvas.value) {
     const ctx = chartCanvas.value.getContext('2d')
     chartInstance = new Chart(ctx, {
@@ -29,7 +35,19 @@ onMounted(() => {
       options: props.options
     })
   }
+}
+
+onMounted(() => {
+  updateChart()
 })
+
+watch(() => props.data, () => {
+  updateChart()
+}, { deep: true })
+
+watch(() => props.options, () => {
+  updateChart()
+}, { deep: true })
 
 onUnmounted(() => {
   if (chartInstance) {

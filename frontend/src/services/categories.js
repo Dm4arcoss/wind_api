@@ -1,11 +1,23 @@
 import api from './api';
 
 export default {
+  _getHeaders() {
+    const token = localStorage.getItem('token');
+    return token ? {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    } : {};
+  },
+
+  count() {
+    return api.get('/categories/count', this._getHeaders());
+  },
   getAll() {
-    return api.get('/categories');
+    return api.get('/categories', this._getHeaders());
   },
   getById(id) {
-    return api.get(`/categories/${id}`);
+    return api.get(`/categories/${id}`, this._getHeaders());
   },
   create(category) {
     return api.post('/categories', JSON.stringify(category), {

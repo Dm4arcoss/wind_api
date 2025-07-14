@@ -1,95 +1,91 @@
 <template>
-  <div :class="themeClass">
-    <div class="flex h-screen bg-gray-100 dark:bg-gray-900">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+    <div class="flex h-screen bg-gray-50 dark:bg-gray-900">
       <!-- Menu Lateral -->
-      <aside v-if="$route.path !== '/login'" class="w-64 bg-white dark:bg-gray-800 shadow-lg">
+      <aside v-if="$route.path !== '/login'" class="w-64 bg-white dark:bg-gray-800 shadow-lg border-r border-gray-200 dark:border-gray-700 transition-colors duration-300">
         <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <h2 class="text-xl font-semibold text-gray-800 dark:text-white">E-commerce</h2>
+          <h2 class="text-xl font-semibold text-gray-800 dark:text-white transition-colors duration-300">E-commerce</h2>
+          <ThemeToggle />
         </div>
         
         <nav class="mt-4">
-          <div class="px-4 py-2 text-xs text-gray-500 dark:text-gray-400 uppercase">Menu</div>
+          <div class="px-4 py-2 text-xs text-gray-500 dark:text-gray-400 uppercase font-medium">Menu</div>
           
-          <router-link to="/dashboard" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
-            <i class="fas fa-tachometer-alt w-5 mr-3"></i>
+          <router-link to="/dashboard" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group">
+            <i class="fas fa-tachometer-alt w-5 mr-3 text-gray-400 group-hover:text-primary-500 transition-colors duration-200"></i>
             Dashboard
           </router-link>
           
-          <router-link to="/dashboard/products" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
-            <i class="fas fa-box w-5 mr-3"></i>
+          <router-link to="/dashboard/products" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group">
+            <i class="fas fa-box w-5 mr-3 text-gray-400 group-hover:text-primary-500 transition-colors duration-200"></i>
             Produtos
           </router-link>
           
-          <router-link to="/dashboard/categories" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
-            <i class="fas fa-tags w-5 mr-3"></i>
+          <router-link to="/dashboard/products/new" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group">
+            <i class="fas fa-plus-circle w-5 mr-3 text-gray-400 group-hover:text-primary-500 transition-colors duration-200"></i>
+            Novo Produto
+          </router-link>
+          
+          <router-link to="/dashboard/categories" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group">
+            <i class="fas fa-tags w-5 mr-3 text-gray-400 group-hover:text-primary-500 transition-colors duration-200"></i>
             Categorias
           </router-link>
           
-          <router-link to="/dashboard/customers" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
-            <i class="fas fa-users w-5 mr-3"></i>
+          <router-link to="/dashboard/customers" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group">
+            <i class="fas fa-users w-5 mr-3 text-gray-400 group-hover:text-primary-500 transition-colors duration-200"></i>
             Clientes
           </router-link>
           
-          <router-link to="/dashboard/orders" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
-            <i class="fas fa-shopping-cart w-5 mr-3"></i>
+          <router-link to="/dashboard/orders" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group">
+            <i class="fas fa-shopping-cart w-5 mr-3 text-gray-400 group-hover:text-primary-500 transition-colors duration-200"></i>
             Pedidos
           </router-link>
-          <router-link to="/dashboard/orders/new" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
-            <i class="fas fa-plus-circle w-5 mr-3"></i>
+          
+          <router-link to="/dashboard/payments" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group">
+            <i class="fas fa-credit-card w-5 mr-3 text-gray-400 group-hover:text-primary-500 transition-colors duration-200"></i>
+            Pagamentos
+          </router-link>
+          
+          <router-link to="/dashboard/orders/new" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group">
+            <i class="fas fa-plus-circle w-5 mr-3 text-gray-400 group-hover:text-primary-500 transition-colors duration-200"></i>
             Novo Pedido
           </router-link>
           
-          <div class="px-4 py-2 mt-4 text-xs text-gray-500 dark:text-gray-400 uppercase">Configurações</div>
+          <div class="px-4 py-2 mt-4 text-xs text-gray-500 dark:text-gray-400 uppercase font-medium">Configurações</div>
           
-          <router-link to="/profile" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
-            <i class="fas fa-user w-5 mr-3"></i>
+          <router-link to="/profile" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group">
+            <i class="fas fa-user w-5 mr-3 text-gray-400 group-hover:text-primary-500 transition-colors duration-200"></i>
             Perfil
           </router-link>
           
-          <a @click="logout" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition cursor-pointer">
-            <i class="fas fa-sign-out-alt w-5 mr-3"></i>
+          <button @click="logout" class="w-full flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group cursor-pointer">
+            <i class="fas fa-sign-out-alt w-5 mr-3 text-gray-400 group-hover:text-red-500 transition-colors duration-200"></i>
             Sair
-          </a>
+          </button>
         </nav>
       </aside>
 
-      <!-- Conteúdo Principal -->
-      <main class="flex-1 overflow-auto">
+      <main class="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
         <div class="p-6">
           <!-- Header -->
           <div v-if="$route.path !== '/login'" class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">
-              {{ $route.name === 'Dashboard' ? 'Dashboard' : $route.name }}
+            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white transition-colors duration-300">
+              {{ $route.meta.title || 'Dashboard' }}
             </h1>
             <div class="flex items-center space-x-4">
-              <button @click="toggleTheme" class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition">
-                <i class="fas" :class="isDarkMode ? 'fa-sun' : 'fa-moon'" aria-hidden="true"></i>
-              </button>
-              <div class="relative">
-                <button @click="toggleUserMenu" class="flex items-center space-x-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition p-2">
-                  <span class="text-sm font-medium text-gray-900 dark:text-white">{{ authStore.user?.name || 'Usuário' }}</span>
-                  <i class="fas fa-user-circle text-gray-600 dark:text-gray-300"></i>
-                </button>
-                <div v-if="userMenuOpen" class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
-                  <div class="px-4 py-2">
-                    <span class="text-sm text-gray-900 dark:text-white">{{ authStore.user?.email }}</span>
-                  </div>
-                  <div class="border-t border-gray-200 dark:border-gray-700"></div>
-                  <router-link to="/profile" class="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem" tabindex="-1" id="user-menu-item-0">
-                    <i class="fas fa-edit text-gray-400 dark:text-gray-500"></i>
-                    <span>Edit profile</span>
-                  </router-link>
-                  <div class="border-t border-gray-200 dark:border-gray-700"></div>
-                  <button @click="logout" class="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem" tabindex="-1" id="user-menu-item-1">
-                    <i class="fas fa-sign-out-alt text-gray-400 dark:text-gray-500"></i>
-                    <span>Sign out</span>
-                  </button>
-                </div>
+              <div class="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+                <i class="fas fa-user-circle"></i>
+                <span>{{ authStore.user?.email || 'Usuário' }}</span>
               </div>
             </div>
           </div>
-          
-          <router-view />
+
+          <!-- Conteúdo da página -->
+          <router-view v-slot="{ Component }">
+            <transition name="fade" mode="out-in">
+              <component :is="Component" />
+            </transition>
+          </router-view>
         </div>
       </main>
     </div>
@@ -97,55 +93,15 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useAuthStore } from './stores/auth';
+import { computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from './stores/auth';
+import ThemeToggle from './components/ThemeToggle.vue';
 
-const router = useRouter();
 const authStore = useAuthStore();
+const router = useRouter();
 
-const isDarkMode = ref(false);
-const userMenuOpen = ref(false);
-
-onMounted(async () => {
-  // Carregar perfil do usuário se estiver autenticado
-  if (authStore.isAuthenticated) {
-    try {
-      await authStore.getUserProfile();
-    } catch (error) {
-      console.error('Erro ao carregar perfil do usuário:', error);
-    }
-  }
-
-  const savedDarkMode = localStorage.getItem('darkMode');
-  if (savedDarkMode === 'true') {
-    isDarkMode.value = true;
-  } else {
-    isDarkMode.value = false;
-  }
-
-  const savedTheme = localStorage.getItem('theme');
-  if (savedTheme === 'dark') {
-    isDarkMode.value = true;
-    document.body.classList.add('dark');
-  } else {
-    isDarkMode.value = false;
-    document.body.classList.remove('dark');
-  }
-});
-
-const userName = computed(() => authStore.user?.name || 'Usuário');
-const userEmail = computed(() => authStore.user?.email || 'Usuário');
-
-const toggleTheme = () => {
-  isDarkMode.value = !isDarkMode.value;
-  localStorage.setItem('darkMode', isDarkMode.value);
-};
-
-const toggleUserMenu = () => {
-  userMenuOpen.value = !userMenuOpen.value;
-};
-
+// Função para logout
 const logout = () => {
   authStore.logout();
   localStorage.removeItem('token');
@@ -153,171 +109,58 @@ const logout = () => {
 };
 
 const isLoggedIn = computed(() => authStore.isAuthenticated);
-
-// Carregar tema salvo
-onMounted(() => {
-  const savedDarkMode = localStorage.getItem('darkMode');
-  if (savedDarkMode === 'true') {
-    isDarkMode.value = true;
-  } else {
-    isDarkMode.value = false;
-  }
-});
-
-const themeClass = computed(() => isDarkMode.value ? 'dark' : '');
-
-// Carregar tema salvo
-onMounted(() => {
-  const savedTheme = localStorage.getItem('theme');
-  if (savedTheme === 'dark') {
-    isDarkMode.value = true;
-    document.body.classList.add('dark');
-  } else {
-    isDarkMode.value = false;
-    document.body.classList.remove('dark');
-  }
-});
 </script>
 
 <style>
-/* Estilos de transição do menu */
-.slide-enter-active,
-.slide-leave-active {
-  transition: transform 0.3s ease;
+/* Estilos de transição */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
 }
 
-.slide-enter-from,
-.slide-leave-to {
-  transform: translateX(-100%);
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
-/* Estilos do tema dark */
-body.dark {
-  background-color: #1a1a1a;
-  color: #ffffff;
+/* Estilos globais para o tema */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
-.dark .bg-white {
-  background-color: #2d2d2d !important;
+/* Scrollbar customizada para tema escuro */
+.dark ::-webkit-scrollbar {
+  width: 8px;
 }
 
-.dark .bg-gray-100 {
-  background-color: #333 !important;
+.dark ::-webkit-scrollbar-track {
+  background: #374151;
 }
 
-.dark .text-gray-800 {
-  color: #ffffff !important;
+.dark ::-webkit-scrollbar-thumb {
+  background: #6b7280;
+  border-radius: 4px;
 }
 
-.dark .text-gray-600 {
-  color: #b3b3b3 !important;
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
 }
 
-.dark .text-gray-300 {
-  color: #666 !important;
+/* Scrollbar customizada para tema claro */
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-.dark .border {
-  border-color: #444 !important;
+::-webkit-scrollbar-track {
+  background: #f3f4f6;
 }
 
-.dark .shadow-lg {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
-}
-/* Estilos de transição do menu */
-.slide-enter-active,
-.slide-leave-active {
-  transition: transform 0.3s ease;
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
 }
 
-.slide-enter-from,
-.slide-leave-to {
-  transform: translateX(-100%);
-}
-
-/* Estilos do tema dark */
-body.dark {
-  background-color: #1a1a1a;
-  color: #ffffff;
-}
-
-.dark .bg-white {
-  background-color: #2d2d2d !important;
-}
-
-.dark .bg-gray-100 {
-  background-color: #333 !important;
-}
-
-.dark .text-gray-800 {
-  color: #ffffff !important;
-}
-
-.dark .text-gray-600 {
-  color: #b3b3b3 !important;
-}
-
-.dark .text-gray-300 {
-  color: #666 !important;
-}
-
-.dark .border {
-  border-color: #444 !important;
-}
-
-.dark .shadow-lg {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
-}
-
-.dark .hover:bg-blue-600:hover {
-  background-color: #3b82f6 !important;
-}
-
-.dark .hover:bg-blue-500:hover {
-  background-color: #3b82f6 !important;
-}
-
-.dark .hover:bg-blue-600 {
-  background-color: #2563eb !important;
-}
-
-.dark .bg-blue-500 {
-  background-color: #3b82f6 !important;
-}
-
-.dark .hover:bg-gray-700:hover {
-  background-color: #4b5563 !important;
-}
-
-.dark .hover:bg-gray-600:hover {
-  background-color: #475569 !important;
-}
-
-.dark .hover:bg-gray-500:hover {
-  background-color: #64748b !important;
-}
-
-.dark .text-blue-500 {
-  color: #3b82f6 !important;
-}
-
-.dark .hover:text-blue-700:hover {
-  color: #2563eb !important;
-}
-
-.dark .hover:text-blue-600:hover {
-  color: #3b82f6 !important;
-}
-
-.dark .text-red-500 {
-  color: #ef4444 !important;
-}
-
-.dark .hover:text-red-700:hover {
-  color: #db2777 !important;
-}
-
-.dark .hover:text-red-600:hover {
-  color: #dc2626 !important;
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
 }
 </style>

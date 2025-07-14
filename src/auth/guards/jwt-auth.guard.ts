@@ -12,7 +12,10 @@ export class JwtAuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
+    console.log('Request headers:', request.headers);
+    
     const token = this.extractTokenFromHeader(request);
+    console.log('Token extraído:', token);
     
     if (!token) {
       throw new UnauthorizedException('Token não fornecido');
@@ -20,9 +23,18 @@ export class JwtAuthGuard implements CanActivate {
 
     try {
       const payload = await this.jwtService.verifyAsync(token);
+      console.log('Payload do token:', payload);
+      
+      // Validate token expiration
+      if (payload.exp && Math.floor(Date.now() / 1000) > payload.exp) {
+        throw new UnauthorizedException('Token expirado');
+      }
+
       request.user = payload;
+      console.log('Usuário injetado no request:', request.user);
       return true;
     } catch (error) {
+      console.error('Erro ao validar token:', error);
       throw new UnauthorizedException('Token inválido');
     }
   }
@@ -33,11 +45,7 @@ export class JwtAuthGuard implements CanActivate {
       return undefined;
     }
 
-    const [type, token] = authHeader.split(' ');
-    if (type !== 'Bearer') {
-      return undefined;
-    }
-
-    return token;
+    const [type, token] = authHeader.split(' ') ?? [];
+    return type === 'Bearer' ? token : undefined;
   }
 }

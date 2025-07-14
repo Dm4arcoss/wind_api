@@ -18,16 +18,7 @@
           >
         </div>
 
-        <div>
-          <label class="block text-gray-700 text-sm font-bold mb-2">
-            Descrição:
-          </label>
-          <textarea
-            v-model="category.description"
-            class="w-full p-2 border rounded bg-gray-700 text-white"
-            rows="3"
-          ></textarea>
-        </div>
+
 
         <div class="flex justify-end space-x-4">
           <button
@@ -108,29 +99,135 @@ export default {
         this.error = null;
 
         // Garantir que os dados estão no formato correto
+        const name = this.category.name.trim();
+        const slug = name.toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)+/g, '');
+
         const categoryData = {
-          name: this.category.name.trim()
+          name: name,
+          slug: slug,
+          description: this.category.description.trim()
         };
 
-        // Log para debug
-        console.log('Dados enviados:', categoryData);
+        // Log detalhado para debug
+        console.log('=== Início do processo de envio ===');
+        console.log('Token:', localStorage.getItem('token'));
+        console.log('Dados brutos:', this.category);
+        console.log('Dados formatados:', categoryData);
+        console.log('É edição:', this.isEditing);
+        console.log('ID:', this.$route.params.id);
+
+        // Verificar se o nome está vazio
+        if (!name) {
+          this.error = 'O nome da categoria não pode estar vazio';
+          return;
+        }
+
+        // Verificar se o slug está vazio
+        if (!slug) {
+          this.error = 'Não foi possível gerar o slug da categoria. Por favor, use apenas letras e números no nome.';
+          return;
+        }
 
         // Verificar se temos um token de autenticação
         const token = localStorage.getItem('token');
+        console.log('=== Verificação de autenticação ===');
+        console.log('Token encontrado:', !!token);
+        console.log('Token:', token);
+        
         if (!token) {
           this.error = 'Você precisa estar logado para cadastrar categorias';
           return;
         }
 
+        // Verificar se o token está válido e se o usuário tem permissão
+        try {
+          // Configurar token para esta requisição
+          this.$axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          
+          const response = await this.$axios.get(`${API_URL}/auth/validate`);
+          
+          // Verificar se o usuário tem permissão para criar categorias
+          const user = response.data;
+          console.log('Usuário:', user);
+          
+          if (!user.role || user.role !== 'CUSTOMER') {
+            this.error = 'Você não tem permissão para criar categorias';
+            return;
+          }
+          
+          console.log('Token válido:', response.data);
+        } catch (error) {
+          console.error('Erro ao salvar categoria:', error);
+          if (error.response?.status === 401) {
+            this.error = 'Sessão expirada. Por favor, faça login novamente.';
+          } else if (error.response?.status === 400) {
+            const errors = error.response?.data?.errors || [];
+            if (errors.length > 0) {
+              this.error = errors.join('\n');
+            } else {
+              this.error = error.response?.data?.message || 'Erro ao salvar a categoria';
+            }
+          } else {
+            this.error = 'Erro ao salvar a categoria. Por favor, tente novamente.';
+          }
+        } finally {
+          this.isLoading = false;
+        }
+
+        // Remover qualquer propriedade não utilizada
+        Object.keys(categoryData).forEach(key => {
+          if (key !== 'name' && key !== 'slug') {
+            delete categoryData[key];
+          }
+        });
+
+        console.log('Payload final:', categoryData);
+        console.log('Propriedades:', Object.keys(categoryData));
+        console.log('JSON:', JSON.stringify(categoryData));
+
         if (this.isEditing) {
-          await categoriesService.update(this.$route.params.id, categoryData);
+          console.log('=== Iniciando atualização ===');
+          console.log('ID:', this.$route.params.id);
+          console.log('Payload:', categoryData);
+          const updateResponse = await categoriesService.update(this.$route.params.id, categoryData);
+          console.log('Resposta da atualização:', updateResponse);
         } else {
-          await categoriesService.create(categoryData);
+          console.log('=== Iniciando criação ===');
+          console.log('Payload:', categoryData);
+          const createResponse = await categoriesService.create(categoryData);
+          console.log('Resposta da criação:', createResponse);
+        }
+
+        // Verificar se o nome está vazio
+        if (!categoryData.name) {
+          this.error = 'O nome da categoria não pode estar vazio';
+          return;
+        }
+
+        if (this.isEditing) {
+          console.log('=== Iniciando atualização ===');
+          console.log('ID:', this.$route.params.id);
+          console.log('Payload:', categoryData);
+          const updateResponse = await categoriesService.update(this.$route.params.id, categoryData);
+          console.log('Resposta da atualização:', updateResponse);
+        } else {
+          console.log('=== Iniciando criação ===');
+          console.log('Payload:', categoryData);
+          const createResponse = await categoriesService.create(categoryData);
+          console.log('Resposta da criação:', createResponse);
         }
 
         this.$router.push('/dashboard/categories');
       } catch (error) {
-        console.error('Erro ao salvar categoria:', error);
+        console.error('=== Erro detalhado ===');
+        console.error('Status:', error.response?.status);
+        console.error('Dados da resposta:', error.response?.data);
+        console.error('Mensagem:', error.response?.data?.message);
+        console.error('Erros:', error.response?.data?.errors);
+        console.error('Erro completo:', error);
+
         // Verificar o tipo de erro
         if (error.response?.status === 401) {
           this.error = 'Sessão expirada. Por favor, faça login novamente.';

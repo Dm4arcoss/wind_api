@@ -4,11 +4,8 @@ import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 import Profile from '../views/Profile.vue'
 import Test from '../views/Test.vue'
-import TestProductList from '../views/products/TestProductList.vue'
 import TestAlias from '../views/TestAlias.vue'
 import Dashboard from '../views/Dashboard.vue'
-import NewOrder from '../views/NewOrder.vue'
-
 // Novas páginas
 import ProductList from '../views/products/ProductList.vue'
 import ProductForm from '../views/products/ProductForm.vue'
@@ -16,8 +13,11 @@ import CategoryList from '../views/categories/CategoryList.vue'
 import CategoryForm from '../views/categories/CategoryForm.vue'
 import OrderList from '../views/orders/OrderList.vue'
 import OrderDetail from '../views/orders/OrderDetail.vue'
-// Componentes de clientes
 import Customers from '../views/Customers.vue'
+import NewOrder from '../views/NewOrder.vue'
+import Reports from '../views/Reports.vue'
+import Payment from '../views/Payment.vue'
+import PaymentList from '../views/payments/PaymentList.vue'
 
 // Serviço de autenticação
 import auth from '@/services/auth'
@@ -56,8 +56,6 @@ const routes = [
     component: NewOrder,
     meta: { requiresAuth: true }
   },
-  
-
   
   // Produtos
   {
@@ -103,7 +101,7 @@ const routes = [
   {
     path: '/dashboard/customers',
     name: 'Customers',
-    component: () => import('../views/Customers.vue'),
+    component: Customers,
     meta: { requiresAuth: true }
   },
   
@@ -121,13 +119,6 @@ const routes = [
     meta: { requiresAuth: true }
   },
   
-  // Clientes
-  {
-    path: '/dashboard/customers',
-    name: 'Customers',
-    component: Customers,
-    meta: { requiresAuth: true }
-  },
   // Usuários
   {
     path: '/dashboard/users',
@@ -147,28 +138,28 @@ const routes = [
     component: () => import('../views/users/UserForm.vue'),
     meta: { requiresAuth: true }
   },
+
+  // Relatórios
   {
-    path: '/products/new',
-    name: 'ProductCreate',
-    component: ProductForm,
+    path: '/dashboard/reports',
+    name: 'Reports',
+    component: Reports,
     meta: { requiresAuth: true }
   },
+
+  // Pagamentos
   {
-    path: '/products/:id/edit',
-    name: 'ProductEdit',
-    component: ProductForm,
+    path: '/dashboard/payment/:orderId',
+    name: 'Payment',
+    component: Payment,
     meta: { requiresAuth: true }
   },
+
+  // Lista de Pagamentos
   {
-    path: '/categories/new',
-    name: 'CategoryCreate',
-    component: CategoryForm,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/categories/:id/edit',
-    name: 'CategoryEdit',
-    component: CategoryForm,
+    path: '/dashboard/payments',
+    name: 'PaymentList',
+    component: PaymentList,
     meta: { requiresAuth: true }
   }
 ]
@@ -178,18 +169,67 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach((to, from, next) => {
+// Adicionando guard de rota
+router.beforeEach(async (to, from, next) => {
   // Verificar se a rota requer autenticação
-  if (to.meta.requiresAuth) {
-    // Verificar se está autenticado
-    if (!auth.isAuthenticated()) {
-      // Se não estiver autenticado, redirecionar para login
+  if (to.matched.some(record => record.meta.requiresAuth)) {
+    // Verificar se há token no localStorage
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      // Se não há token, redirecionar para login
+      next({ name: 'Login' });
+    } else {
+      // Se há token, verificar se é válido
+      try {
+        const tokenParts = token.split('.');
+        if (tokenParts.length !== 3) throw new Error('Token inválido');
+        
+        const payload = JSON.parse(atob(tokenParts[1]));
+        const currentTime = Math.floor(Date.now() / 1000);
+        if (payload.exp < currentTime) {
+          // Token expirado, redirecionar para login
+          localStorage.removeItem('token');
+          next({ name: 'Login' });
+        } else {
+          // Token válido, continuar
+          next();
+        }
+      } catch (error) {
+        // Em caso de erro, redirecionar para login
+        localStorage.removeItem('token');
+        next({ name: 'Login' });
+      }
+    }
+  } else {
+    // Se a rota não requer autenticação, continuar
+    next();
+  }
+});
+
+// Middleware de autenticação
+router.beforeEach((to, from, next) => {
+  // Se for uma rota pública, permitir acesso
+  if (to.path === '/login' || to.path === '/register' || to.path === '/') {
+    next();
+    return;
+  }
+
+  // Se a rota requer autenticação
+  if (to.meta?.requiresAuth) {
+    // Verificar autenticação
+    const isAuthenticated = auth.isAuthenticated();
+    
+    if (!isAuthenticated) {
+      // Salvar a rota atual para redirecionar após o login
+      localStorage.setItem('redirectAfterLogin', to.fullPath);
       next('/login');
       return;
     }
   }
-
+  
+  // Permitir acesso à rota
   next();
-})
+});
 
 export default router

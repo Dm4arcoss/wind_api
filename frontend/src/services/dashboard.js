@@ -1,22 +1,112 @@
 import api from './api';
+import { setupToken } from './auth';
 
 export default {
-  getStats() {
-    return api.get('/dashboard/stats');
+  // Resumo completo do dashboard
+  async getDashboard() {
+    setupToken();
+    try {
+      const response = await api.get('/dashboard');
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      console.error('Erro ao buscar dashboard:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Erro ao carregar dashboard'
+      };
+    }
   },
-  getRecentProducts() {
-    return api.get('/dashboard/recent-products');
+
+  // Estatísticas gerais
+  async getStats() {
+    setupToken();
+    try {
+      const response = await api.get('/dashboard/stats');
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      console.error('Erro ao buscar estatísticas:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Erro ao carregar estatísticas'
+      };
+    }
   },
-  getCategoryStats() {
-    return api.get('/dashboard/category-stats');
+
+  // Produtos recentes
+  async getRecentProducts() {
+    setupToken();
+    try {
+      const response = await api.get('/dashboard/recent-products');
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar produtos recentes:', error);
+      throw error;
+    }
   },
-  getTopSellingProducts() {
-    return api.get('/dashboard/top-selling');
+
+  // Estatísticas de categorias
+  async getCategoryStats() {
+    setupToken();
+    try {
+      const response = await api.get('/dashboard/category-stats');
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar estatísticas de categorias:', error);
+      throw error;
+    }
   },
-  getRecentOrders() {
-    return api.get('/dashboard/recent-orders');
+
+  // Produtos mais vendidos
+  async getTopSellingProducts() {
+    setupToken();
+    try {
+      const response = await api.get('/dashboard/top-selling');
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar produtos mais vendidos:', error);
+      throw error;
+    }
   },
-  getOrderStats() {
-    return api.get('/dashboard/order-stats');
+
+  // Pedidos recentes
+  async getRecentOrders() {
+    setupToken();
+    try {
+      const response = await api.get('/dashboard/recent-orders');
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar pedidos recentes:', error);
+      throw error;
+    }
+  },
+
+  // Estatísticas de pedidos por status
+  async getOrderStats() {
+    setupToken();
+    try {
+      const response = await api.get('/dashboard/order-stats');
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar estatísticas de pedidos:', error);
+      throw error;
+    }
+  },
+
+  // Estatísticas de pedidos (endpoint alternativo)
+  async getOrdersStats() {
+    setupToken();
+    try {
+      const response = await api.get('/orders/order-stats');
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar estatísticas de pedidos:', error);
+      throw error;
+    }
   }
-}
+};

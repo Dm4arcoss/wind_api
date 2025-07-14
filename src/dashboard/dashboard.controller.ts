@@ -11,6 +11,77 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiOkResponse, ApiUn
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
+  @ApiOperation({ summary: 'Obter resumo do dashboard' })
+  @ApiOkResponse({ 
+    description: 'Resumo do dashboard retornado com sucesso',
+    schema: {
+      type: 'object',
+      properties: {
+        stats: {
+          type: 'object',
+          properties: {
+            productCount: { type: 'number', example: 120 },
+            orderCount: { type: 'number', example: 34 },
+            userCount: { type: 'number', example: 45 },
+            revenue: { type: 'number', example: 6450.75 }
+          }
+        },
+        recentProducts: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'number', example: 1 },
+              name: { type: 'string', example: 'Smartphone XYZ' },
+              price: { type: 'number', example: 1299.99 },
+              stock: { type: 'number', example: 15 },
+              category: { 
+                type: 'object',
+                properties: {
+                  id: { type: 'number', example: 1 },
+                  name: { type: 'string', example: 'Eletrônicos' }
+                }
+              }
+            }
+          }
+        },
+        recentOrders: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'number', example: 1 },
+              status: { type: 'string', example: 'pending' },
+              total: { type: 'number', example: 1499.99 },
+              createdAt: { type: 'string', format: 'date-time', example: '2025-06-07T14:30:00Z' },
+              user: { 
+                type: 'object',
+                properties: {
+                  id: { type: 'number', example: 1 },
+                  name: { type: 'string', example: 'João Silva' }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  })
+  @Get()
+  async getDashboard() {
+    const [stats, recentProducts, recentOrders] = await Promise.all([
+      this.dashboardService.getStats(),
+      this.dashboardService.getRecentProducts(),
+      this.dashboardService.getRecentOrders()
+    ]);
+
+    return {
+      stats,
+      recentProducts,
+      recentOrders
+    };
+  }
+
   @ApiOperation({ summary: 'Obter estatísticas do dashboard' })
   @ApiOkResponse({ 
     description: 'Estatísticas retornadas com sucesso',

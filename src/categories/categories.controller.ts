@@ -10,6 +10,21 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, A
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
+  @Get('count')
+  @ApiOperation({ summary: 'Contar total de categorias' })
+  @ApiOkResponse({ 
+    description: 'Total de categorias retornadas com sucesso',
+    schema: {
+      type: 'object',
+      properties: {
+        count: { type: 'number', example: 100 }
+      }
+    }
+  })
+  async count() {
+    return this.categoriesService.count();
+  }
+
   @ApiOperation({ summary: 'Criar uma nova categoria' })
   @ApiBody({ type: CreateCategoryDto })
   @ApiResponse({ status: 201, description: 'Categoria criada com sucesso' })

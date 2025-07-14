@@ -21,6 +21,7 @@ export const useAuthStore = defineStore('auth', {
         localStorage.setItem('token', this.token);
         localStorage.setItem('user', JSON.stringify(this.user));
         localStorage.setItem('userId', this.user.id);
+        await this.getUserProfile();
       } catch (error) {
         throw error;
       }
@@ -48,14 +49,28 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async getUserProfile() {
-      if (!this.token) return null;
       try {
-        const response = await api.get('/users/me'); // Usando endpoint específico para o usuário atual
-        // Como estamos autenticados, o backend deve retornar apenas o usuário atual
-        this.user = response.data[0]; // Supondo que o backend retorne um array
+        // Verificar se temos um token válido
+        if (!this.token) {
+          throw new Error('Não autenticado');
+        }
+
+        // Verificar se o token está no header da API
+        if (!api.defaults.headers.common['Authorization']) {
+          api.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
+        }
+
+        // Usar a rota correta do backend
+        const response = await api.get('/auth/profile');
+        this.user = response.data;
         localStorage.setItem('user', JSON.stringify(this.user));
-        return this.user;
+        return response.data;
       } catch (error) {
+        console.error('Erro ao carregar perfil:', error);
+        // Limpar dados do usuário se houver erro de autenticação
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          this.logout();
+        }
         throw error;
       }
     }

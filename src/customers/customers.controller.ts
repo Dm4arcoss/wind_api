@@ -17,8 +17,39 @@ export class CustomersController {
   @ApiResponse({ status: 201, description: 'Cliente criado com sucesso' })
   @ApiResponse({ status: 409, description: 'Cliente com este email já existe' })
   @Post()
-  create(@Body() createCustomerDto: CreateCustomerDto, @Request() req: any) {
-    return this.customersService.create(createCustomerDto, req.user.id);
+  create(@Body() createCustomerDto: CreateCustomerDto, @Request() req) {
+    console.log('🔧 Controller - Dados recebidos:', createCustomerDto);
+    console.log('🔧 Controller - Usuário do token:', req.user);
+
+    // Extrair userId do token JWT
+    const userId = req.user?.sub;
+    
+    if (!userId) {
+      console.error('❌ Controller - userId não encontrado no token');
+      throw new Error('ID do usuário não encontrado no token');
+    }
+
+    console.log('🔧 Controller - UserId extraído:', userId);
+
+    // Criar um novo objeto sem o userId (se vier no corpo)
+    const customerData = {
+      name: createCustomerDto.name,
+      email: createCustomerDto.email,
+      phone: createCustomerDto.phone,
+      address: createCustomerDto.address
+    };
+    
+    console.log('🔧 Controller - Dados do cliente a serem enviados:', customerData);
+    
+    return this.customersService.create(customerData, userId);
+  }
+
+  @ApiOperation({ summary: 'Buscar cliente por email' })
+  @ApiResponse({ status: 200, description: 'Cliente encontrado' })
+  @ApiResponse({ status: 404, description: 'Cliente não encontrado' })
+  @Get('email/:email')
+  findByEmail(@Param('email') email: string) {
+    return this.customersService.findByEmail(email);
   }
 
   @ApiOperation({ summary: 'Listar todos os clientes' })

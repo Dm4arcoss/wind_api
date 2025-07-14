@@ -16,8 +16,8 @@ export class DashboardService {
       this.prisma.order.count(),
       this.prisma.user.count(),
       this.prisma.order.aggregate({
-        where: { status: 'completed' },
-        _sum: { total: true }
+        where: { status: 'DELIVERED' },
+        _sum: { amount: true }
       })
     ]);
 
@@ -25,7 +25,7 @@ export class DashboardService {
       productCount,
       orderCount,
       userCount,
-      revenue: revenue._sum.total || 0
+      revenue: revenue._sum.amount || 0
     };
   }
 
@@ -41,7 +41,7 @@ export class DashboardService {
     const categories = await this.prisma.category.findMany({
       include: {
         _count: {
-          select: { products: true }
+          select: { product: true }
         }
       }
     });
@@ -49,7 +49,7 @@ export class DashboardService {
     const totalProducts = await this.prisma.product.count();
 
     return categories.map(category => {
-      const count = category._count.products;
+      const count = category._count.product;
       const percentage = totalProducts > 0 ? Math.round((count / totalProducts) * 100) : 0;
       
       // Atribuir uma cor com base no ID da categoria (para manter consistência visual)
@@ -129,7 +129,7 @@ export class DashboardService {
       }
     });
     
-    const statuses = ['pending', 'processing', 'completed', 'cancelled'];
+    const statuses = ['PENDING', 'PAID', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
     const colors = ['bg-yellow-500', 'bg-blue-500', 'bg-green-500', 'bg-red-500'];
     
     const totalOrders = ordersByStatus.reduce((sum, item) => sum + item._count.id, 0);

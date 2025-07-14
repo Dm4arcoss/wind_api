@@ -1,134 +1,216 @@
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-    <!-- Cards de Estatísticas -->
-    <Card
-      title="Total de Produtos"
-      :value="totalProducts"
-      iconClass="fas fa-box text-blue-600 dark:text-blue-400"
-    />
+  <div v-if="!isLoading && !error" class="min-h-screen p-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+      <Card
+        title="Total de Produtos"
+        :value="stats.value.totalProducts || 0"
+        iconClass="fas fa-box text-blue-600 dark:text-blue-400"
+      />
 
-    <Card
-      title="Total de Categorias"
-      :value="totalCategories"
-      iconClass="fas fa-tags text-green-600 dark:text-green-400"
-    />
+      <Card
+        title="Total de Categorias"
+        :value="stats.value.totalCategories || 0"
+        iconClass="fas fa-tags text-green-600 dark:text-green-400"
+      />
 
-    <Card
-      title="Total de Pedidos"
-      :value="stats.totalOrders"
-      iconClass="fas fa-shopping-cart text-yellow-600 dark:text-yellow-400"
-    />
-  </div>
+      <Card
+        title="Total de Pedidos"
+        :value="stats.value.totalOrders || 0"
+        iconClass="fas fa-shopping-cart text-yellow-600 dark:text-yellow-400"
+      />
+    </div>
 
-  <!-- Gráficos -->
-  <div class="mt-6">
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-      <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Vendas por Mês</h3>
-      <div class="h-64">
-        <line-chart :data="salesData" :options="chartOptions" />
+    <div class="mt-6">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Vendas por Mês</h3>
+        <div class="h-64">
+          <line-chart v-if="chartOptions.value.data" :data="chartOptions.value.data" :options="chartOptions.value.options" />
+        </div>
       </div>
+    </div>
+  </div>
+  <div v-else-if="error" class="min-h-screen p-6">
+    <div class="bg-red-100 dark:bg-red-900 rounded-lg p-6">
+      <p class="text-red-700 dark:text-red-300">{{ error }}</p>
+    </div>
+  </div>
+  <div v-else class="min-h-screen p-6">
+    <div class="flex justify-center items-center min-h-screen">
+      <div class="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import Card from './Card.vue'
 import LineChart from '@/components/charts/LineChart.vue'
-import axios from 'axios'
+import ordersService from '@/services/orders'
 import productsService from '@/services/products'
 import categoriesService from '@/services/categories'
-import ordersService from '@/services/orders'
-import auth from '@/services/auth'
-import profileService from '@/services/profile'
 
+// Inicializar variáveis de estado
 const stats = ref({
   totalProducts: 0,
   totalCategories: 0,
   totalOrders: 0
 })
 
-const recentProducts = ref([])
-const categories = ref([])
-const recentOrders = ref([])
-const loading = ref(true)
-
-const totalProducts = computed(() => {
-  return recentProducts.value.length
-})
-
-const totalCategories = computed(() => {
-  return categories.value.length
-})
-
-const salesData = ref({
-  labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
-  datasets: [{
-    label: 'Vendas',
-    data: [12, 19, 3, 5, 2, 3],
-    borderColor: '#4F46E5',
-    tension: 0.4
-  }]
-})
-
 const chartOptions = ref({
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      position: 'top'
-    }
-  },
-  scales: {
-    y: {
-      beginAtZero: true
+  data: null,
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top'
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true
+      }
     }
   }
 })
+
+const recentProducts = ref([])
+const recentOrders = ref([])
+const allCategories = ref([])
+const isLoading = ref(true)
+const error = ref(null)
+
+// Funções auxiliares
+const loadWithRetry = async (fn, name) => {
+  try {
+    return await fn();
+  } catch (error) {
+    console.error(`Erro ao carregar ${name}:`, error);
+    error.value = error.message;
+    throw error;
+  }
+};
+
+// Funções de busca
+const fetchTotals = async () => {
+  try {
+    const [productsCount, categoriesCount, ordersCount] = await Promise.all([
+      productsService.count(),
+      categoriesService.count(),
+      ordersService.count()
+    ]);
+    stats.value = {
+      totalProducts: productsCount,
+      totalCategories: categoriesCount,
+      totalOrders: ordersCount
+    };
+  } catch (error) {
+    throw error;
+  }
+};
 
 const fetchRecentProducts = async () => {
   try {
-    const response = await productsService.getRecentProducts()
-    recentProducts.value = response.data || []
+    recentProducts.value = await productsService.getRecentProducts();
   } catch (error) {
-    console.error('Erro ao buscar produtos recentes:', error)
-    recentProducts.value = []
+    throw error;
   }
-}
+};
 
 const fetchRecentOrders = async () => {
   try {
-    const response = await ordersService.getMyOrders()
-    recentOrders.value = response.data || []
+    recentOrders.value = await ordersService.getRecentOrders();
   } catch (error) {
-    console.error('Erro ao buscar pedidos:', error)
-    recentOrders.value = []
+    throw error;
   }
-}
+};
 
 const fetchCategories = async () => {
   try {
-    const response = await categoriesService.getAll()
-    categories.value = response.data || []
+    allCategories.value = await categoriesService.getAll();
   } catch (error) {
-    console.error('Erro ao buscar categorias:', error)
-    categories.value = []
+    throw error;
   }
-}
+};
 
+const fetchSalesData = async () => {
+  try {
+    const salesData = await ordersService.getSalesData();
+    if (salesData && salesData.labels && salesData.values) {
+      chartOptions.value.data = {
+        labels: salesData.labels,
+        datasets: [{
+          label: 'Vendas',
+          data: salesData.values,
+          borderColor: 'rgb(75, 192, 192)',
+          tension: 0.1
+        }]
+      };
+    } else {
+      chartOptions.value.data = null;
+      throw new Error('Dados de vendas inválidos');
+    }
+  } catch (error) {
+    console.error('Erro ao buscar dados de vendas:', error);
+    error.value = error.message;
+    throw error;
+  }
+};
+
+// Carregamento inicial
 onMounted(async () => {
   try {
-    // Carregar dados
+    isLoading.value = true;
     await Promise.all([
+      fetchTotals(),
       fetchRecentProducts(),
+      fetchRecentOrders(),
       fetchCategories(),
-      fetchRecentOrders()
-    ])
-    loading.value = false
+      fetchSalesData()
+    ]);
   } catch (error) {
-    console.error('Erro ao carregar dados:', error)
+    console.error('Erro ao carregar dados do dashboard:', error);
+    error.value = error.message;
+  } finally {
+    isLoading.value = false;
   }
-})
+});
+
+// Limpar dados ao desmontar
+onBeforeUnmount(() => {
+  stats.value = {
+    totalProducts: 0,
+    totalCategories: 0,
+    totalOrders: 0
+  };
+  chartOptions.value = {
+    data: null,
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'top'
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  };
+  recentProducts.value = [];
+  recentOrders.value = [];
+  allCategories.value = [];
+  error.value = null;
+});
+</script>
+
+<script>
+export default {
+  name: 'Dashboard'
+}
 </script>
 
 <style scoped>

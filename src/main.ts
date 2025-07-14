@@ -12,6 +12,14 @@ async function bootstrap() {
   // Configuração de arquivos estáticos
   app.useStaticAssets(join(__dirname, '..', 'public'));
   
+  // Configuração do CORS mais específica
+  app.enableCors({
+    origin: ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173', 'http://127.0.0.1:3000'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  });
+  
   // Configuração do Swagger
   const config = new DocumentBuilder()
     .setTitle('API de Produtos')
@@ -35,7 +43,7 @@ async function bootstrap() {
     forbidNonWhitelisted: true,
   }));
   app.use(cookieParser());
-  app.enableCors();
+  
   await app.listen(3001);
   
   console.log(`Aplicação rodando em: http://localhost:3001`);
